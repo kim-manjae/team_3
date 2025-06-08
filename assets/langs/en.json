@@ -1,0 +1,20 @@
+{
+  "app_title": "Hospital Finder",
+  "search_hint": "Search by hospital, address, or department",
+  "nearby": "Nearby Hospitals",
+  "internal_medicine": "Internal Medicine",
+  "surgery": "General Surgery",
+  "pediatrics": "Pediatrics",
+  "orthopedics": "Orthopedic Surgery",
+  "otolaryngology": "ENT (Ear, Nose & Throat)",
+  "dermatology": "Dermatology",
+  "ophthalmology": "Ophthalmology (Eye Clinic)",
+  "neurology": "Neurology",
+  "neurosurgery": "Neurosurgery",
+  "obstetrics_gynecology": "Obstetrics & Gynecology (OB/GYN)",
+  "urology": "Urology",
+  "psychiatry": "Psychiatry & Mental Health",
+  "family_medicine": "Family Medicine",
+  "dentistry": "Dentistry (Dental Clinic)",
+  "oriental_medicine": "Korean Medicine"
+}

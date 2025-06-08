@@ -1,0 +1,20 @@
+{
+  "app_title": "病院検索",
+  "search_hint": "病院名、住所、診療科で検索",
+  "nearby": "近くの病院",
+  "internal_medicine": "内科",
+  "surgery": "外科",
+  "pediatrics": "小児科",
+  "orthopedics": "整形外科",
+  "otolaryngology": "耳鼻科",
+  "dermatology": "皮膚科",
+  "ophthalmology": "眼科",
+  "neurology": "神経内科",
+  "neurosurgery": "脳神経外科",
+  "obstetrics_gynecology": "産婦人科",
+  "urology": "泌尿器科",
+  "psychiatry": "精神科・心療内科",
+  "family_medicine": "家庭医療科",
+  "dentistry": "歯科",
+  "oriental_medicine": "韓方（ハンバン）医院"
+}
