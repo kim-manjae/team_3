@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
     <application
         android:label="project"
         android:name="${applicationName}"
@@ -14,6 +15,23 @@
         <meta-data
             android:name="com.naver.maps.map.q884t9qoyu"
             android:value="nYWOL1JM7AjZvZQvQWcdPKaxnwCs4MAz1qGcTQzw" />
+
+        <!-- 네이버 로그인 설정 -->
+        <meta-data
+            android:name="com.naver.sdk.clientId"
+            android:value="KbzFjWsQ_5_HD7OCeKbE" />
+        <meta-data
+            android:name="com.naver.sdk.clientSecret"
+            android:value="XCdj1aEiGa" />
+        <meta-data
+            android:name="com.naver.sdk.clientName"
+            android:value="social_login" />
+
+        <!-- 카카오 API 키 -->
+        <meta-data
+            android:name="com.kakao.sdk.AppKey"
+            android:value="af1dbe4ec46db5309c04c6f09355da61" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -31,6 +49,15 @@
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme"
                 />
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:host="oauth"
+                    android:scheme="kakaoaf1dbe4ec46db5309c04c6f09355da61" />
+            </intent-filter>
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -54,6 +81,24 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <activity
+            android:name="com.kakao.sdk.flutter.AuthCodeCustomTabsActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kakaoaf1dbe4ec46db5309c04c6f09355da61"
+                    android:host="oauth"/>
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name="com.navercorp.nid.oauth.ui.activity.NidOAuthCustomTabActivity"
+            android:launchMode="singleTask"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
@@ -65,5 +110,7 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <package android:name="com.kakao.talk" />
+        <package android:name="com.nhn.android.search" />
     </queries>
 </manifest>

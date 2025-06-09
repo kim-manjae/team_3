@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:project/service/social_login.dart';
 import 'hospital/hospital_main.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:kakao_flutter_sdk_common/kakao_flutter_sdk_common.dart';
+
 
 /// 애플리케이션의 진입점
 ///
@@ -27,6 +30,10 @@ void main() async {
         NAnotherAuthFailedException() =>
             print("인증 실패: $ex"),
       });
+
+  //카카오 SDK 초기화
+  KakaoSdk.init(nativeAppKey: 'af1dbe4ec46db5309c04c6f09355da61');
+  runApp(const MyApp());
 
   // 앱 실행
   runApp(
@@ -59,7 +66,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '의료기관 검색',
+      title: '소셜 로그인 + 지도 예제',
       // 앱의 기본 테마 설정
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -69,7 +76,7 @@ class MyApp extends StatelessWidget {
       supportedLocales: context.supportedLocales,
       locale: context.locale,
       // 앱의 초기 화면을 병원 메인 페이지로 설정
-      home: HospitalMainPage(),
+      home: LoginWidget(),
     );
   }
 }

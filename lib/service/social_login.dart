@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_login/interface/types/naver_login_status.dart';
+import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:flutter_naver_login/flutter_naver_login.dart';
@@ -128,86 +129,103 @@ class _LoginWidgetState extends State<LoginWidget> {
   //화면 UI 빌드
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.keyboard_arrow_right, color: Colors.black87),
-            onPressed: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => HospitalMainPage()),
-              );
-            },
+    return Column(
+      //세로 중앙 정렬
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (isLoggedIn) ...[
+          //로그인된 경우 사용자 정보와 로그아웃 표시
+          Text(
+            '환영합니다, ${nickname ?? email}님',
+            style: const TextStyle(fontSize: 18),
           ),
-        ],
-      ),
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (isLoggedIn) ...[
-              //로그인된 경우 사용자 정보와 로그아웃 표시
-              Text(
-                '환영합니다, ${nickname ?? email}님',
-                style: const TextStyle(fontSize: 18),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: logout,
-                child: Text(
-                  _loginPlatform == LoginPlatform.kakao
-                      ? '카카오톡 로그아웃'
-                      : _loginPlatform == LoginPlatform.naver
-                      ? '네이버 로그아웃'
-                      : '구글 로그아웃',
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: logout,
+            child: Text(
+              _loginPlatform == LoginPlatform.kakao
+                  ? '카카오톡 로그아웃'
+                  : _loginPlatform == LoginPlatform.naver
+                  ? '네이버 로그아웃'
+                  : '구글 로그아웃',
+            ),
+          ),
+        ] else ...[
+          Column(
+            children: [
+              //로그인되지 않은 경우 로그인 버튼 표시
+              GestureDetector(
+                //카카오 로그인
+                onTap: loginWithKakao,
+                child: Image.asset(
+                  'assets/images/kakao_login.png',
+                  width: 150,
+                  height: 60,
+                  fit: BoxFit.contain,
                 ),
               ),
-            ] else ...[
-              Column(
-                children: [
-                  //로그인되지 않은 경우 로그인 버튼 표시
-                  GestureDetector(
-                    //카카오 로그인
-                    onTap: loginWithKakao,
-                    child: Image.asset(
-                      'assets/images/kakao_login_medium_narrow.png',
-                      width: 150,
-                      height: 60,
-                      fit: BoxFit.contain,
-                    ),
+              const SizedBox(height: 5),
+              GestureDetector(
+                //네이버 로그인
+                onTap: loginWithNaver,
+                child: Image.asset(
+                  'assets/images/naver_login.png',
+                  width: 150,
+                  height: 45,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 5),
+              GestureDetector(
+                //구글 로그인
+                onTap: loginWithGoogle,
+                child: Image.asset(
+                  'assets/images/google_login.png',
+                  width: 150,
+                  height: 60,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 5),
+              GestureDetector(
+                //건너 뛰기
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => HospitalMainPage()),
+                  );
+                },
+                child: Container(
+                  width: 150,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: Colors.teal.shade400,
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  const SizedBox(height: 5),
-                  GestureDetector(
-                    //네이버 로그인
-                    onTap: loginWithNaver,
-                    child: Image.asset(
-                      'assets/images/btnG_naver.png',
-                      width: 150,
-                      height: 45,
-                      fit: BoxFit.contain,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.arrow_forward,
+                        size: 20,
+                        color: Colors.amber,
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        "로그인 건너뛰기",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.amber,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 5),
-                  GestureDetector(
-                    //구글 로그인
-                    onTap: loginWithGoogle,
-                    child: Image.asset(
-                      'assets/images/android_light_sq_SU@4x.png',
-                      width: 150,
-                      height: 60,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
-          ],
-        ),
-      ),
+          ),
+        ],
+      ],
     );
   }
 }
