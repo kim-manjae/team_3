@@ -45,6 +45,9 @@ dependencies:
   easy_localization: ^3.0.3
   permission_handler: ^11.3.0
   get: ^4.6.5
+  flutter_naver_login: ^2.1.1
+  google_sign_in: ^6.1.0
+  kakao_flutter_sdk_user: ^1.9.5
 
 
 dev_dependencies:
@@ -77,6 +80,7 @@ flutter:
     - assets/langs/en.json
     - assets/langs/ja.json
     - assets/langs/ko.json
+    - assets/images/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
