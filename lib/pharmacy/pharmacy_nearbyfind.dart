@@ -3,7 +3,7 @@ import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:geolocator/geolocator.dart';
 import '../component/medical_facility.dart';
 import '../component/medical_facility_detailpage.dart';
-import '../hospital/hospital_search.dart' show MedicalFacilityDetailPage;
+import 'package:easy_localization/easy_localization.dart';
 
 class NearbyMedicalMapWidget extends StatefulWidget {
   final Position currentPosition;
@@ -13,7 +13,7 @@ class NearbyMedicalMapWidget extends StatefulWidget {
   const NearbyMedicalMapWidget({
     required this.currentPosition,
     required this.facilities,
-    this.title = '주변 약국',
+    this.title = 'pharmacy.nearby',
     Key? key,
   }) : super(key: key);
 
@@ -29,7 +29,7 @@ class _NearbyMedicalMapWidgetState extends State<NearbyMedicalMapWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title), backgroundColor: Colors.green),
+      appBar: AppBar(title: Text(widget.title.tr()), backgroundColor: Colors.green),
       body: Stack(
         children: [
           NaverMap(
@@ -61,7 +61,7 @@ class _NearbyMedicalMapWidgetState extends State<NearbyMedicalMapWidget> {
               );
               currentMarker.setCaption(
                 NOverlayCaption(
-                  text: '현재 위치',
+                  text: 'pharmacy.current_location'.tr(),
                   textSize: 14,
                   color: Colors.blue,
                 ),
@@ -101,7 +101,7 @@ class _NearbyMedicalMapWidgetState extends State<NearbyMedicalMapWidget> {
 
                   marker.setCaption(
                     NOverlayCaption(
-                      text: facility.getCleanDutyName() ?? '이름 없음',
+                      text: facility.getCleanDutyName() ?? 'pharmacy.no_name'.tr(),
                       textSize: 14,
                       // 약국 이름은 항상 검은색으로 표시
                       color: Colors.black,
@@ -131,108 +131,178 @@ class _NearbyMedicalMapWidgetState extends State<NearbyMedicalMapWidget> {
               bottom: 0,
               left: 0,
               right: 0,
-              child: Container(
-                height: 150,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: Offset(0, -2),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 지도 보기 버튼 (목록 바로 위)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: FloatingActionButton.extended(
+                      onPressed: () {
+                        setState(() {
+                          _isListVisible = false;
+                        });
+                      },
+                      label: Text('pharmacy.view_map'.tr()),
+                      icon: Icon(Icons.map),
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
                     ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        '주변 약국 목록',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
+                  ),
+                  Container(
+                    height: MediaQuery.of(context).size.height / 3,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: Offset(0, -2),
                         ),
-                      ),
+                      ],
                     ),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: widget.facilities.length,
-                        itemBuilder: (context, index) {
-                          final facility = widget.facilities[index];
-                          // MedicalFacility 모델의 계산된 운영 상태 사용
-                          final String calculatedStatus =
-                          facility.calculateTodayOpenStatus();
-                          final bool isOperating = calculatedStatus.contains(
-                            '운영중',
-                          );
-
-                          // 운영 상태에 따라 색상 변경
-                          final Color statusColor =
-                          isOperating
-                              ? Colors.green
-                              : calculatedStatus.contains('운영종료')
-                              ? Colors.red
-                              : Colors.grey; // 정보 없음 등
-
-                          return ListTile(
-                            leading: Icon(
-                              Icons.local_pharmacy,
-                              color: statusColor, // 계산된 상태에 따라 아이콘 색상 변경
-                            ),
-                            title: Text(
-                              facility.getCleanDutyName() ?? '이름 없음',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text(facility.dutyAddr ?? '주소 없음'),
-                            trailing: Text(
-                              calculatedStatus, // 계산된 상태 텍스트 표시
-                              style: TextStyle(
-                                color: statusColor, // 계산된 상태에 따라 텍스트 색상 변경
-                                fontWeight: FontWeight.bold,
+                    child: Column(
+                      children: [
+                        // 드래그 핸들
+                        Container(
+                          width: 40,
+                          height: 4,
+                          margin: EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'pharmacy.list'.tr(),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
                               ),
-                            ),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (_) => MedicalFacilityDetailPage(
-                                    facility: facility,
+                              Text(
+                                '${widget.facilities.length}${'pharmacy.count'.tr()}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: widget.facilities.length,
+                            itemBuilder: (context, index) {
+                              final facility = widget.facilities[index];
+                              final String calculatedStatus = facility.calculateTodayOpenStatus();
+                              final bool isOperating = calculatedStatus.contains('운영중');
+                              final Color statusColor = isOperating
+                                  ? Colors.green
+                                  : calculatedStatus.contains('운영종료')
+                                  ? Colors.red
+                                  : Colors.grey;
+
+                              // 영업 상태 텍스트 번역
+                              String translatedStatus = '';
+                              if (calculatedStatus.contains('운영중')) {
+                                translatedStatus = 'operating'.tr();
+                              } else if (calculatedStatus.contains('운영종료')) {
+                                translatedStatus = 'closed'.tr();
+                              } else {
+                                translatedStatus = 'detail.no_hours'.tr();
+                              }
+
+                              return Card(
+                                margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                child: ListTile(
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  leading: Container(
+                                    padding: EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: statusColor.withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.local_pharmacy,
+                                      color: statusColor,
+                                    ),
                                   ),
+                                  title: Text(
+                                    facility.getCleanDutyName() ?? 'pharmacy.no_name'.tr(),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(height: 4),
+                                      Text(
+                                        facility.dutyAddr ?? 'pharmacy.no_address'.tr(),
+                                        style: TextStyle(fontSize: 13),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        translatedStatus,
+                                        style: TextStyle(
+                                          color: statusColor,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => MedicalFacilityDetailPage(
+                                          facility: facility,
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               );
                             },
-                          );
-                        },
-                      ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
 
-          // 목록 보기/숨기기 버튼
-          Positioned(
-            bottom: _isListVisible ? 216.0 : 16.0,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: FloatingActionButton.extended(
-                onPressed: () {
-                  setState(() {
-                    _isListVisible = !_isListVisible;
-                  });
-                },
-                label: Text(_isListVisible ? '지도 보기' : '목록 보기'),
-                icon: Icon(_isListVisible ? Icons.map : Icons.list),
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
+          // 목록이 숨겨져 있을 때 하단에 목록 보기 버튼
+          if (!_isListVisible)
+            Positioned(
+              bottom: 16.0,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: FloatingActionButton.extended(
+                  onPressed: () {
+                    setState(() {
+                      _isListVisible = !_isListVisible;
+                    });
+                  },
+                  label: Text('pharmacy.view_list'.tr()),
+                  icon: Icon(Icons.list),
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

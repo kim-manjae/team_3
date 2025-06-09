@@ -1,3 +1,4 @@
+// 의료기관 데이터 모델
 import 'package:flutter/material.dart'; // Color 사용을 위해 추가
 
 class MedicalFacility {
@@ -5,73 +6,164 @@ class MedicalFacility {
   final String? dutyName;
   final String? dutyAddr;
   final String? dutyTel1;
-  final String? dutyTime1s; // 월요일 시작 시간
-  final String? dutyTime2s; // 화요일 시작 시간
-  final String? dutyTime3s; // 수요일 시작 시간
-  final String? dutyTime4s; // 목요일 시작 시간
-  final String? dutyTime5s; // 금요일 시작 시간
-  final String? dutyTime6s; // 토요일 시작 시간
-  final String? dutyTime7s; // 일요일 시작 시간
-  final String? dutyTime8s; // 공휴일 시작 시간
-  final String? dutyTime1c; // 월요일 종료 시간
-  final String? dutyTime2c; // 화요일 종료 시간
-  final String? dutyTime3c; // 수요일 종료 시간
-  final String? dutyTime4c; // 목요일 종료 시간
-  final String? dutyTime5c; // 금요일 종료 시간
-  final String? dutyTime6c; // 토요일 종료 시간
-  final String? dutyTime7c; // 일요일 종료 시간
-  final String? dutyTime8c; // 공휴일 종료 시간
+  final String? dutyDiv;
+  final String? dutyDivNam;
+  final String? dutyEmcls;
+  final String? dutyEmclsName;
+  final String? dutyEryn;
+  final String? dutyEtc;
+  final String? dutyMapimg;
+  final String? postCdn1;
+  final String? postCdn2;
   final String? wgs84Lat;
   final String? wgs84Lon;
   final String? dutyInf;
-  final bool? isOpen; // API에서 직접 제공하는 운영 여부 (있다면 사용)
-  double? distance; // 거리는 필요에 따라 추가 (NearbyMedicalMapWidget에서 계산 시 저장)
-  final String? todayOpenStatusFromServer; // 서버에서 제공하는 todayOpenStatus (참고용)
-  final String? dutyDivNm; // 의료기관 유형
-  final String? hospUrl; // 병원 URL
+  final String? dutyTime1s;
+  final String? dutyTime2s;
+  final String? dutyTime3s;
+  final String? dutyTime4s;
+  final String? dutyTime5s;
+  final String? dutyTime6s;
+  final String? dutyTime7s;
+  final String? dutyTime8s;
+  final String? dutyTime1c;
+  final String? dutyTime2c;
+  final String? dutyTime3c;
+  final String? dutyTime4c;
+  final String? dutyTime5c;
+  final String? dutyTime6c;
+  final String? dutyTime7c;
+  final String? dutyTime8c;
+  double? distance;
+  final bool? isOpen;
+  final String? todayOpenStatusFromServer;
+  final String? dutyDivNm;
+  final String? hospUrl;
+  final String? dutyTel3;
+  final String? MKioskTy25;
+  final String? dgidIdName;
 
   MedicalFacility({
     this.hpid,
     this.dutyName,
     this.dutyAddr,
     this.dutyTel1,
+    this.dutyDiv,
+    this.dutyDivNam,
+    this.dutyEmcls,
+    this.dutyEmclsName,
+    this.dutyEryn,
+    this.dutyEtc,
+    this.dutyMapimg,
+    this.postCdn1,
+    this.postCdn2,
+    this.wgs84Lat,
+    this.wgs84Lon,
+    this.dutyInf,
     this.dutyTime1s, this.dutyTime2s, this.dutyTime3s, this.dutyTime4s,
     this.dutyTime5s, this.dutyTime6s, this.dutyTime7s, this.dutyTime8s,
     this.dutyTime1c, this.dutyTime2c, this.dutyTime3c, this.dutyTime4c,
     this.dutyTime5c, this.dutyTime6c, this.dutyTime7c, this.dutyTime8c,
-    this.wgs84Lat,
-    this.wgs84Lon,
-    this.dutyInf,
-    this.isOpen,
     this.distance,
+    this.isOpen,
     this.todayOpenStatusFromServer,
     this.dutyDivNm,
     this.hospUrl,
+    this.dutyTel3,
+    this.MKioskTy25,
+    this.dgidIdName,
   });
 
   factory MedicalFacility.fromJson(Map<String, dynamic> json) {
+    // 좌표값 처리 및 검증
+    String? lat = json['wgs84Lat'] ?? json['wgs84lat'];
+    String? lon = json['wgs84Lon'] ?? json['wgs84lon'];
+
+    if (lat != null && lon != null) {
+      try {
+        double latValue = double.parse(lat);
+        double lonValue = double.parse(lon);
+
+        // 좌표값 유효성 검사
+        if (latValue < -90 || latValue > 90 || lonValue < -180 || lonValue > 180) {
+          print('Invalid coordinates for ${json['dutyName']}: $lat, $lon');
+          lat = null;
+          lon = null;
+        } else {
+          // 원본 좌표값 그대로 사용
+          lat = latValue.toString();
+          lon = lonValue.toString();
+        }
+      } catch (e) {
+        print('Error parsing coordinates for ${json['dutyName']}: $e');
+        lat = null;
+        lon = null;
+      }
+    }
+
     return MedicalFacility(
       hpid: json['hpid'],
-      dutyName: json['dutyName'],
-      dutyAddr: json['dutyAddr'],
-      dutyTel1: json['dutyTel1'],
-      dutyTime1s: json['dutyTime1s'], dutyTime1c: json['dutyTime1c'],
-      dutyTime2s: json['dutyTime2s'], dutyTime2c: json['dutyTime2c'],
-      dutyTime3s: json['dutyTime3s'], dutyTime3c: json['dutyTime3c'],
-      dutyTime4s: json['dutyTime4s'], dutyTime4c: json['dutyTime4c'],
-      dutyTime5s: json['dutyTime5s'], dutyTime5c: json['dutyTime5c'],
-      dutyTime6s: json['dutyTime6s'], dutyTime6c: json['dutyTime6c'],
-      dutyTime7s: json['dutyTime7s'], dutyTime7c: json['dutyTime7c'],
-      dutyTime8s: json['dutyTime8s'], dutyTime8c: json['dutyTime8c'],
-      wgs84Lat: json['wgs84Lat'],
-      wgs84Lon: json['wgs84Lon'],
-      dutyInf: json['dutyInf'],
-      isOpen: json['is_open'] is bool ? json['is_open'] : (json['is_open'] == 'true' ? true : (json['is_open'] == 'false' ? false : null)),
-      todayOpenStatusFromServer: json['today_open_status'], // 서버에서 오는 값을 다른 필드에 저장
+      dutyName: json['dutyName'] ?? json['dutyname'],
+      dutyAddr: json['dutyAddr'] ?? json['dutyaddr'],
+      dutyTel1: json['dutyTel1'] ?? json['dutytel1'],
+      dutyDiv: json['dutyDiv'] ?? json['dutydiv'],
+      dutyDivNam: json['dutyDivNam'] ?? json['dutydivnam'],
+      dutyEmcls: json['dutyEmcls'] ?? json['dutyemcls'],
+      dutyEmclsName: json['dutyEmclsName'] ?? json['dutyemclsname'],
+      dutyEryn: json['dutyEryn'] ?? json['dutyeryn'],
+      dutyEtc: json['dutyEtc'] ?? json['dutyetc'],
+      dutyMapimg: json['dutyMapimg'] ?? json['dutymapimg'],
+      postCdn1: json['postCdn1'] ?? json['postcdn1'],
+      postCdn2: json['postCdn2'] ?? json['postcdn2'],
+      wgs84Lat: lat,
+      wgs84Lon: lon,
+      dutyInf: json['dutyInf'] ?? json['dutyinf'],
+      dutyTime1s: json['dutyTime1s'] ?? json['dutytime1s'],
+      dutyTime2s: json['dutyTime2s'] ?? json['dutytime2s'],
+      dutyTime3s: json['dutyTime3s'] ?? json['dutytime3s'],
+      dutyTime4s: json['dutyTime4s'] ?? json['dutytime4s'],
+      dutyTime5s: json['dutyTime5s'] ?? json['dutytime5s'],
+      dutyTime6s: json['dutyTime6s'] ?? json['dutytime6s'],
+      dutyTime7s: json['dutyTime7s'] ?? json['dutytime7s'],
+      dutyTime8s: json['dutyTime8s'] ?? json['dutytime8s'],
+      dutyTime1c: json['dutyTime1c'] ?? json['dutytime1c'],
+      dutyTime2c: json['dutyTime2c'] ?? json['dutytime2c'],
+      dutyTime3c: json['dutyTime3c'] ?? json['dutytime3c'],
+      dutyTime4c: json['dutyTime4c'] ?? json['dutytime4c'],
+      dutyTime5c: json['dutyTime5c'] ?? json['dutytime5c'],
+      dutyTime6c: json['dutyTime6c'] ?? json['dutytime6c'],
+      dutyTime7c: json['dutyTime7c'] ?? json['dutytime7c'],
+      dutyTime8c: json['dutyTime8c'] ?? json['dutytime8c'],
       distance: (json['distance'] != null) ? double.tryParse(json['distance'].toString()) : null,
-      dutyDivNm: json['dutyDivNm'],
+      isOpen: json['is_open'] is bool ? json['is_open'] : (json['is_open'] == 'true' ? true : (json['is_open'] == 'false' ? false : null)),
+      todayOpenStatusFromServer: json['today_open_status'],
+      dutyDivNm: json['dutyDivNm'] ?? json['dutydivnm'],
       hospUrl: json['hospUrl'],
+      dutyTel3: json['dutyTel3'],
+      MKioskTy25: json['MKioskTy25'],
+      dgidIdName: json['dgidIdName'],
     );
+  }
+
+  // 좌표값을 double로 변환하는 메서드
+  double? getLatitude() {
+    if (wgs84Lat == null) return null;
+    try {
+      return double.parse(wgs84Lat!);
+    } catch (e) {
+      print('Error parsing latitude: $e');
+      return null;
+    }
+  }
+
+  double? getLongitude() {
+    if (wgs84Lon == null) return null;
+    try {
+      return double.parse(wgs84Lon!);
+    } catch (e) {
+      print('Error parsing longitude: $e');
+      return null;
+    }
   }
 
   // "HHMM" 형태의 시간 문자열을 DateTime 객체로 변환 (오늘 날짜 기준)
@@ -94,7 +186,6 @@ class MedicalFacility {
       } else if (hour == 24) { // 24시 이후 시간은 유효하지 않다고 가정
         return null;
       }
-
 
       return DateTime(now.year, now.month, now.day, hour, minute);
     } catch (e) {
@@ -183,11 +274,9 @@ class MedicalFacility {
     return "운영 시간 판단 불가";
   }
 
-  String getCleanDutyName() {
-    if (dutyName == null) return '';
-    // 여러 불필요한 법인/단체명 패턴을 정규식으로 제거
-    return dutyName!.replaceAll(
-        RegExp(r'("사"|\(사\)|\(의\)|\(재\)|\(주\)|\(학교법인\)|\(사단법인\)|\(사회복지법인\)|\(의료법인\)|\(재단법인\))'),
-        '').trim();
+  // 의료기관 이름에서 불필요한 문자 제거
+  String? getCleanDutyName() {
+    if (dutyName == null) return null;
+    return dutyName!.replaceAll(RegExp(r'[^\w\s가-힣]'), '').trim();
   }
 }

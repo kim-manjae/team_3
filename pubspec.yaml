@@ -42,11 +42,10 @@ dependencies:
   geocoding: ^2.0.0
   xml: ^6.3.0
   latlong2: ^0.9.0
-  easy_localization: ^3.0.0
-  google_sign_in: ^6.1.0
-  kakao_flutter_sdk_user: ^1.4.0
-  flutter_naver_login: ^2.1.0
-  
+  easy_localization: ^3.0.3
+  permission_handler: ^11.3.0
+  get: ^4.6.5
+
 
 dev_dependencies:
   flutter_test:
@@ -68,14 +67,16 @@ flutter:
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
+  # easy_localization 설정
   uses-material-design: true
+  generate: true
 
   # To add assets to your application, add an assets section, like this:
-assets:
-    - asset/marker_current.png
-    - asset/marker_open.png
-    - asset/marker_closed.png
+  assets:
     - assets/langs/
+    - assets/langs/en.json
+    - assets/langs/ja.json
+    - assets/langs/ko.json
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
@@ -84,6 +85,7 @@ assets:
 
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/to/asset-from-package
+  # easy_localization 설정
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a

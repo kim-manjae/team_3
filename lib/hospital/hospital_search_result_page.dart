@@ -6,6 +6,8 @@ import '../component/medical_facility_detailpage.dart';
 import 'dart:math';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:easy_localization/easy_localization.dart';
+import 'widget/medical_facility_card.dart';
 
 const String apiBase = 'http://10.0.2.2:8000';
 
@@ -28,24 +30,8 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   late TabController _tabController;
-  final List<String> subjects = [
-    '내 주변',
-    '내과',
-    '외과',
-    '소아과',
-    '정형외과',
-    '이비인후과',
-    '피부과',
-    '안과',
-    '신경과',
-    '신경외과',
-    '산부인과',
-    '비뇨기과',
-    '정신건강의학과',
-    '가정의학과',
-    '치과',
-    '한의원',
-  ];
+  late List<String> subjects;
+  bool _mounted = true;
 
   @override
   void initState() {
@@ -53,6 +39,7 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
     _searchController.text = '';
     _scrollController.addListener(_scrollListener);
     currentPosition = widget.currentPosition;
+    _initializeSubjects();
     _tabController = TabController(length: subjects.length, vsync: this);
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) return;
@@ -67,8 +54,41 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
     });
   }
 
+  void _initializeSubjects() {
+    final List<String> subjectKeys = [
+      'subject_nearby',
+      'subject_internal',
+      'subject_surgery',
+      'subject_pediatrics',
+      'subject_orthopedics',
+      'subject_ent',
+      'subject_dermatology',
+      'subject_ophthalmology',
+      'subject_neurology',
+      'subject_neurosurgery',
+      'subject_obgyn',
+      'subject_urology',
+      'subject_psychiatry',
+      'subject_family',
+      'subject_dentistry',
+      'subject_oriental',
+    ];
+
+    subjects = subjectKeys.map((key) => key.tr()).toList();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _initializeSubjects();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   void dispose() {
+    _mounted = false;
     _tabController.dispose();
     _searchController.dispose();
     _scrollController.dispose();
@@ -87,7 +107,7 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
     final keyword = _searchController.text.trim();
     if (keyword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('검색어를 입력해주세요')),
+        SnackBar(content: Text('input_keyword'.tr())),
       );
       return;
     }
@@ -117,6 +137,7 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
   }
 
   Future<void> _fetchData({required int pageNo}) async {
+    if (!mounted) return;
     String url;
     String base = '$apiBase/api/medical/search?QN=${_searchController.text.trim()}&page_no=$pageNo&num_of_rows=$_itemsPerPage';
     if (currentPosition != null) {
@@ -125,6 +146,8 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
     url = base;
     try {
       final response = await http.get(Uri.parse(url));
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         final data = json.decode(utf8.decode(response.bodyBytes));
         final List items = data['items'] ?? [];
@@ -155,21 +178,27 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
             return a.distance!.compareTo(b.distance!);
           });
         }
-        setState(() {
-          facilities = newFacilities;
-          _totalCount = totalCount;
-        });
+        if (mounted) {
+          setState(() {
+            facilities = newFacilities;
+            _totalCount = totalCount;
+          });
+        }
       } else {
+        if (mounted) {
+          setState(() {
+            facilities = [];
+            _totalCount = 0;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
           facilities = [];
           _totalCount = 0;
         });
       }
-    } catch (e) {
-      setState(() {
-        facilities = [];
-        _totalCount = 0;
-      });
     }
   }
 
@@ -180,10 +209,41 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
       _currentPage = 1;
       _totalCount = 0;
     });
-    await _fetchDataBySubject(subject: subject, pageNo: 1);
-    setState(() {
-      isLoading = false;
-    });
+
+    // 원래 번역 키로 검색
+    final List<String> subjectKeys = [
+      'subject_nearby',
+      'subject_internal',
+      'subject_surgery',
+      'subject_pediatrics',
+      'subject_orthopedics',
+      'subject_ent',
+      'subject_dermatology',
+      'subject_ophthalmology',
+      'subject_neurology',
+      'subject_neurosurgery',
+      'subject_obgyn',
+      'subject_urology',
+      'subject_psychiatry',
+      'subject_family',
+      'subject_dentistry',
+      'subject_oriental',
+    ];
+
+    String originalKey = '';
+    for (int i = 0; i < subjects.length; i++) {
+      if (subjects[i] == subject) {
+        originalKey = subjectKeys[i];
+        break;
+      }
+    }
+
+    await _fetchDataBySubject(subject: originalKey, pageNo: 1);
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   Future<void> _fetchDataBySubject({required String subject, required int pageNo}) async {
@@ -242,11 +302,16 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
   }
 
   Future<void> _showNearbyHospitals() async {
+    if (!mounted) return;
     setState(() { isLoading = true; });
     try {
       Position position = currentPosition ?? await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      if (!mounted) return;
       setState(() { currentPosition = position; });
+
       final response = await http.get(Uri.parse('$apiBase/api/medical/nearby?latitude=${position.latitude}&longitude=${position.longitude}&radius=10000&type=hospital'));
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         final data = json.decode(utf8.decode(response.bodyBytes));
         final List items = data['items'] ?? [];
@@ -270,15 +335,21 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
           double bd = b.distance ?? double.infinity;
           return ad.compareTo(bd);
         });
-        setState(() {
-          facilities = hospitals;
-          isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            facilities = hospitals;
+            isLoading = false;
+          });
+        }
       } else {
-        setState(() { isLoading = false; });
+        if (mounted) {
+          setState(() { isLoading = false; });
+        }
       }
     } catch (e) {
-      setState(() { isLoading = false; });
+      if (mounted) {
+        setState(() { isLoading = false; });
+      }
     }
   }
 
@@ -336,7 +407,7 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('병원 검색'),
+        title: Text('hospital_search'.tr()),
       ),
       body: Column(
         children: [
@@ -348,7 +419,7 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: '병원명, 주소, 진료과목 등 검색',
+                      hintText: 'search_hint'.tr(),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -413,7 +484,7 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
             child: isLoading && facilities.isEmpty
                 ? Center(child: CircularProgressIndicator())
                 : facilities.isEmpty
-                ? Center(child: Text('검색 결과가 없습니다.'))
+                ? Center(child: Text('no_result'.tr()))
                 : ListView.builder(
               controller: _scrollController,
               itemCount: facilities.length + (_isPaginating ? 1 : 0),
@@ -431,56 +502,17 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
                 if (f.distance != null && f.distance != double.infinity) {
                   distanceText = formatDistance(f.distance!);
                 }
-                return Card(
-                  margin: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                  elevation: 1.0,
-                  child: ListTile(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                    title: Text(
-                      f.getCleanDutyName() ?? '이름 없음',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(f.dutyAddr ?? '주소 정보 없음'),
-                        Text('전화: ${f.dutyTel1 ?? '정보 없음'}'),
-                        Row(
-                          children: [
-                            Text(
-                              f.todayOpenStatusFromServer ?? '운영 상태 정보 없음',
-                              style: TextStyle(
-                                color: f.todayOpenStatusFromServer == '운영중'
-                                    ? Colors.green
-                                    : f.todayOpenStatusFromServer == '운영종료'
-                                    ? Colors.red
-                                    : Colors.grey,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Spacer(),
-                            if (distanceText != null)
-                              Text(
-                                distanceText,
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.normal,
-                                  fontSize: 13,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => MedicalFacilityDetailPage(facility: f),
-                        ),
-                      );
-                    },
-                  ),
+                return MedicalFacilityCard(
+                  facility: f,
+                  distanceText: distanceText,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MedicalFacilityDetailPage(facility: f),
+                      ),
+                    );
+                  },
                 );
               },
             ),

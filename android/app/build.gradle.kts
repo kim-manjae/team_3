@@ -6,9 +6,8 @@ plugins {
 }
 
 android {
-    namespace = "com.example.social_login"
+    namespace = "com.example.project"
     compileSdk = flutter.compileSdkVersion
-    //ndkVersion = flutter.ndkVersion
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -38,10 +37,6 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
-}
-
-dependencies {
-    implementation("com.google.android.gms:play-services-auth:20.7.0")
 }
 
 flutter {
