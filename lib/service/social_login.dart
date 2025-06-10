@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:flutter_naver_login/flutter_naver_login.dart';
 import 'package:project/hospital/hospital_main.dart';
+import 'package:project/widgets/nav_main_page.dart';
 
 //로그인 플랫폼 구분용 enum
 enum LoginPlatform { google, kakao, naver }
@@ -192,7 +193,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => HospitalMainPage()),
+                    MaterialPageRoute(builder: (context) => nav_MainPage()),
                   );
                 },
                 child: Container(
