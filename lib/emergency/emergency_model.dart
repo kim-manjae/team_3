@@ -18,6 +18,7 @@ class EmergencyFacility {
   final String? hvccc;  // 흉부중환자실
   final String? hvicc;  // 내과중환자실
   final String? hvgc;  // 일반병상
+  final String? MKioskTy25; // 응급실 여부
 
   EmergencyFacility({
     this.hpid,
@@ -35,6 +36,7 @@ class EmergencyFacility {
     this.hvccc,
     this.hvicc,
     this.hvgc,
+    this.MKioskTy25,
   });
 
   factory EmergencyFacility.fromJson(Map<String, dynamic> json) {
@@ -59,6 +61,7 @@ class EmergencyFacility {
       hvccc: getStringValue(json['hvccc']),
       hvicc: getStringValue(json['hvicc']),
       hvgc: getStringValue(json['hvgc']),
+      MKioskTy25: getStringValue(json['MKioskTy25']),
     );
   }
 

@@ -115,7 +115,7 @@ class _NearbyMedicalMapWidgetState extends State<NearbyMedicalMapWidget> {
                       MaterialPageRoute(
                         builder:
                             (_) =>
-                            MedicalFacilityDetailPage(facility: facility),
+                            MedicalFacilityDetailPage(facility: facility, fromMainHospitalSearch: false),
                       ),
                     );
                   });
@@ -251,13 +251,26 @@ class _NearbyMedicalMapWidgetState extends State<NearbyMedicalMapWidget> {
                                         style: TextStyle(fontSize: 13),
                                       ),
                                       SizedBox(height: 4),
-                                      Text(
-                                        translatedStatus,
-                                        style: TextStyle(
-                                          color: statusColor,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13,
-                                        ),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            translatedStatus,
+                                            style: TextStyle(
+                                              color: statusColor,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            // 거리 표시 (PharmacyService.formatDistance 사용)
+                                            facility.distance != null ? '${(facility.distance! >= 1000 ? (facility.distance! / 1000).toStringAsFixed(1) + 'km' : facility.distance!.toStringAsFixed(0) + 'm')}' : '-',
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -267,6 +280,7 @@ class _NearbyMedicalMapWidgetState extends State<NearbyMedicalMapWidget> {
                                       MaterialPageRoute(
                                         builder: (_) => MedicalFacilityDetailPage(
                                           facility: facility,
+                                          fromMainHospitalSearch: false,
                                         ),
                                       ),
                                     );

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'emergency_model.dart';
+import 'dart:math';
 
 class EmergencyService {
   // localhost 대신 실제 서버 IP 주소 사용
@@ -65,7 +66,13 @@ class EmergencyService {
           String? lon = getStringValue(e, 'wgs84Lon');
           String? subject = getStringValue(e, 'dgidIdName');
           double? distance;
-          if (e['distance'] != null) {
+          if (lat != null && lon != null && latitude != null && longitude != null) {
+            try {
+              distance = _calculateDistance(latitude, longitude, double.parse(lat), double.parse(lon));
+            } catch (e) {
+              distance = null;
+            }
+          } else if (e['distance'] != null) {
             distance = double.tryParse(e['distance'].toString());
           }
           if (name == null || tel == null || lat == null || lon == null) {
@@ -76,7 +83,7 @@ class EmergencyService {
             print('Tel: $tel');
             print('Coordinates: $lat, $lon');
           }
-          return EmergencyFacility(
+          final facility = EmergencyFacility(
             hpid: hpid,
             dutyName: name,
             dutyTel: tel,
@@ -86,13 +93,17 @@ class EmergencyService {
             dgidIdName: subject,
             distance: distance,
           );
+          // MKioskTy25 값 로그 출력
+          print('병원명: \\${name}\\, MKioskTy25: \\${e['MKioskTy25']}\\');
+          return facility;
         })
             .where((facility) =>
         facility.dutyName != null && facility.dutyName!.isNotEmpty &&
             facility.dutyTel != null && facility.dutyTel!.isNotEmpty &&
             facility.dutyAddr != null && facility.dutyAddr!.isNotEmpty &&
             facility.wgs84Lat != null && facility.wgs84Lat!.isNotEmpty &&
-            facility.wgs84Lon != null && facility.wgs84Lon!.isNotEmpty
+            facility.wgs84Lon != null && facility.wgs84Lon!.isNotEmpty &&
+            (facility.distance == null || facility.distance! <= 5000)
         )
             .toList();
       } else {
@@ -105,5 +116,12 @@ class EmergencyService {
     } catch (e) {
       throw Exception('응급의료기관 정보를 불러오지 못했습니다: $e');
     }
+  }
+
+  static double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    const double p = 0.017453292519943295; // Math.PI / 180
+    final double a = 0.5 - (cos((lat2 - lat1) * p) / 2) +
+        cos(lat1 * p) * cos(lat2 * p) * (1 - cos((lon2 - lon1) * p)) / 2;
+    return 12742 * 1000 * asin(sqrt(a)); // 2 * R; R = 6371 km
   }
 }

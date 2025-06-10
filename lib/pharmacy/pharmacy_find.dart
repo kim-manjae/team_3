@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:xml/xml.dart';
 import 'dart:math' show cos, sqrt, asin;
 import '../component/medical_facility.dart';
@@ -165,6 +166,7 @@ class _PharmacyFindPageState extends State<PharmacyFindPage> {
               lat,
               lon,
             );
+            facility.distance = distance;
             return distance <= 500;
           } catch (e) {
             return false;

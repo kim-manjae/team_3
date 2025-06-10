@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import '../pharmacy/pharmacy_find.dart';
-import '../reservation/reservation_list_page.dart';
 import 'hospital_search_result_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../emergency/emergency_box.dart';
@@ -203,53 +202,6 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                   ),
                 );
               },
-            ),
-            SizedBox(height: 20),
-            // 예약 현황 버튼
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ReservationListPage(),
-                  ),
-                );
-              },
-              child: Container(
-                width: 180,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.purple.shade50,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.calendar_today,
-                      size: 30,
-                      color: Colors.purple,
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'reservation.status'.tr(),
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.purple,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ),
           ],
         ),

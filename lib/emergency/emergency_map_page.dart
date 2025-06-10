@@ -197,7 +197,7 @@ class _EmergencyMapPageState extends State<EmergencyMapPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => MedicalFacilityDetailPage(facility: facility.toMedicalFacility()),
+                      builder: (_) => MedicalFacilityDetailPage(facility: facility.toMedicalFacility(), fromMainHospitalSearch: false),
                     ),
                   );
                 });
@@ -321,12 +321,25 @@ class _EmergencyMapPageState extends State<EmergencyMapPage> {
                                         ),
                                       ),
                                       SizedBox(height: 2),
-                                      Text(
-                                        '${'address'.tr()}: ${EmergencyService.formatDistance(f.distance)}',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.grey[500],
-                                        ),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            f.calculateTodayOpenStatus().contains('운영중') ? 'operating'.tr() : _getTranslatedStatus(f.calculateTodayOpenStatus()),
+                                            style: TextStyle(
+                                              color: f.calculateTodayOpenStatus().contains('운영중') ? Colors.green[800] : Colors.red[800],
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            EmergencyService.formatDistance(f.distance),
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -349,7 +362,7 @@ class _EmergencyMapPageState extends State<EmergencyMapPage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => MedicalFacilityDetailPage(facility: f.toMedicalFacility()),
+                                        builder: (_) => MedicalFacilityDetailPage(facility: f.toMedicalFacility(), fromMainHospitalSearch: false),
                                       ),
                                     );
                                   },

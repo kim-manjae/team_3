@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:project/service/social_login.dart';
-import 'hospital/hospital_main.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:kakao_flutter_sdk_common/kakao_flutter_sdk_common.dart';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// 애플리케이션의 진입점
 ///
@@ -19,9 +18,16 @@ void main() async {
   // 다국어 지원 초기화
   await EasyLocalization.ensureInitialized();
 
+  // 1) .env 로드
+  await dotenv.load(fileName: ".env");
+
+  // 2) 환경변수에서 키 가져오기
+  final naverClientId = dotenv.env['NAVER_MAP_CLIENT_ID']!;
+  final kakaoAppKey   = dotenv.env['KAKAO_SDK_APP_KEY']!;
+
   // 네이버 지도 API 초기화
-  await FlutterNaverMap().init(
-      clientId: 'q884t9qoyu',
+  FlutterNaverMap().init(
+      clientId: naverClientId,
       onAuthFailed: (ex) => switch (ex) {
         NQuotaExceededException(:final message) =>
             print("사용량 초과 (message: $message)"),
@@ -32,7 +38,7 @@ void main() async {
       });
 
   //카카오 SDK 초기화
-  KakaoSdk.init(nativeAppKey: 'af1dbe4ec46db5309c04c6f09355da61');
+  KakaoSdk.init(nativeAppKey: kakaoAppKey);
   runApp(const MyApp());
 
   // 앱 실행

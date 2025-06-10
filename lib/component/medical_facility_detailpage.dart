@@ -1,8 +1,14 @@
 // 의료기관 상세 정보 화면
 import 'package:flutter/material.dart';
+import 'package:flutter_naver_map/flutter_naver_map.dart';
+import '../map/route_map_page.dart';
 import '../reservation/hospital_reservation_page.dart';
+import '../services/navigation_service.dart';
+import 'common_naver_map.dart';
 import 'medical_facility.dart';
 import '../map/medical_map.dart';
+import '../services/location_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
@@ -12,8 +18,13 @@ import 'naver_directions_button.dart';
 
 class MedicalFacilityDetailPage extends StatelessWidget {
   final MedicalFacility facility;
+  final bool fromMainHospitalSearch; // 메인 병원찾기에서 진입한 경우 true
 
-  const MedicalFacilityDetailPage({Key? key, required this.facility}) : super(key: key);
+  const MedicalFacilityDetailPage({
+    Key? key,
+    required this.facility,
+    this.fromMainHospitalSearch = false,
+  }) : super(key: key);
 
   // 시간을 'HHMM'에서 'HH:MM' 형식으로 변환 (Flutter 헬퍼 함수)
   String _formatTime(String? time) {
@@ -107,7 +118,7 @@ class MedicalFacilityDetailPage extends StatelessWidget {
     final dutyTimes = getDutyTimes();
     final String calculatedStatus = facility.calculateTodayOpenStatus();
     // 응급의료기관(24시간 운영)일 경우 무조건 운영중으로 표시
-    final bool isEmergency = (facility.dutyDiv == '응급실' || facility.dutyDivNam == '응급실' || calculatedStatus == '운영중');
+    final bool isEmergency = (facility.dutyDiv == '응급실' || facility.dutyDivNam == '응급실');
     final bool isOperating = isEmergency || calculatedStatus.contains('운영중');
     final String displayStatusText = isEmergency ? 'operating'.tr() : _getTranslatedStatus(calculatedStatus);
     final Color statusColor = isOperating ? Colors.green :
@@ -152,7 +163,7 @@ class MedicalFacilityDetailPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (!isEmergency && facility.dutyDiv != '약국') // 응급의료기관과 약국이 아닌 경우에만 예약 버튼 표시
+                if (fromMainHospitalSearch && !isEmergency && facility.dutyDiv != '약국') // 메인 병원찾기에서만 예약 버튼 표시
                   ElevatedButton.icon(
                     onPressed: () => _navigateToReservationPage(context),
                     icon: Icon(Icons.calendar_today),
