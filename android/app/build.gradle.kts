@@ -1,3 +1,13 @@
+import java.util.Properties   // ← 최상단에 위치시킵니다
+
+// local.properties 로부터 키를 읽어들입니다
+val localProps = Properties().apply {
+    val propFile = rootProject.file("local.properties")
+    if (propFile.exists()) {
+        propFile.inputStream().use { load(it) }
+    }
+}
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -28,6 +38,16 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+
+        // manifestPlaceholders에 API 키·설정값 등록
+        manifestPlaceholders["NAVER_MAP_API_KEY"]         = localProps.getProperty("NAVER_MAP_API_KEY", "")
+        manifestPlaceholders["NAVER_LOGIN_CLIENT_ID"]     = localProps.getProperty("NAVER_LOGIN_CLIENT_ID", "")
+        manifestPlaceholders["NAVER_LOGIN_CLIENT_SECRET"] = localProps.getProperty("NAVER_LOGIN_CLIENT_SECRET", "")
+        manifestPlaceholders["NAVER_LOGIN_CLIENT_NAME"]   = localProps.getProperty("NAVER_LOGIN_CLIENT_NAME", "")
+        manifestPlaceholders["KAKAO_SDK_APP_KEY"]         = localProps.getProperty("KAKAO_SDK_APP_KEY", "")
+
+
     }
 
     buildTypes {
