@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
+import 'chatbot_page.dart';
 
-class ChatbotScreen extends StatelessWidget {
+class ChatbotScreen extends StatefulWidget {
   const ChatbotScreen({Key? key}) : super(key: key);
-  @override Widget build(BuildContext c) => Center(child: Text('챗봇 화면'));
+
+  @override
+  State<ChatbotScreen> createState() => _ChatbotScreenState();
+}
+
+class _ChatbotScreenState extends State<ChatbotScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return ChatbotPage();
+  }
 }

@@ -3,6 +3,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:kakao_flutter_sdk_common/kakao_flutter_sdk_common.dart';
+import 'package:project/chat_bot/chatbot_page.dart';
+import 'package:project/emergency/emergency_map_page.dart';
+import 'package:project/hospital/hospital_search_result_page.dart';
+import 'package:project/pharmacy/pharmacy_find.dart';
 import 'package:project/service/social_login.dart';      // LoginWidget 정의된 파일
 import 'package:project/chat_bot/chatbot_screen.dart';  // 다른 화면들
 import 'package:project/hospital/hospital_main.dart';
@@ -10,6 +14,8 @@ import 'package:project/profile/profile_screen.dart';
 import 'package:project/reservation/reservation_list_page.dart';
 import 'package:project/splash/splash_screen.dart';
 import '../widgets/bottom_nav_bar.dart';
+import 'package:provider/provider.dart';
+import 'state/app_state.dart';
 
 /// 애플리케이션의 진입점
 ///
@@ -45,6 +51,8 @@ void main() async {
 
   //카카오 SDK 초기화
   KakaoSdk.init(nativeAppKey: kakaoAppKey);
+  
+  // 소셜 로그인 초기화
   runApp(const MyApp());
 
   // 앱 실행
@@ -60,7 +68,10 @@ void main() async {
       fallbackLocale: const Locale('ko'), // 기본 언어
       startLocale: const Locale('ko'), // 시작 언어
       useOnlyLangCode: true, // 언어 코드만 사용
-      child: const MyApp(),
+      child: ChangeNotifierProvider(
+        create: (_) => AppState(),
+        child: const MyApp(),
+      ),
     ),
   );
 }
@@ -88,7 +99,14 @@ class MyApp extends StatelessWidget {
       supportedLocales: context.supportedLocales,
       locale: context.locale,
       // 앱의 초기 화면을 병원 메인 페이지로 설정
-      home: const SplashScreen(),
+      home: SplashScreen(),
+      routes: {
+        '/chatbot': (context) => const ChatbotPage(),
+        '/hospital_search': (context) => const HospitalSearchResultPage(),
+        '/pharmacy_nearby': (context) => const PharmacyFindPage(),
+        '/emergency_map': (context) => const EmergencyMapPage(),
+        '/reservation': (context) => ReservationListPage(),
+      },
     );
   }
 }
