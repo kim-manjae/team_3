@@ -2,12 +2,13 @@ import os
 import requests
 import xml.etree.ElementTree as ET
 from fastapi import APIRouter, HTTPException, Query
+from dotenv import load_dotenv
 
 router = APIRouter()
-
+load_dotenv(dotenv_path="key.env")
 # 서비스키는 환경변수 또는 별도 설정 파일에서 불러오는 것을 권장합니다.
-MADMDTL_SERVICE_KEY = os.getenv("MADMDTL_SERVICE_KEY", "Q7Knj2bDIIEEcUa+IssDHW01vO1JbDDmNzyarPtSuPBFJ0OPxjvLgwIi+aWtIKZt/4IHjIK6cBiFvXyBXD67dw==")
-HSPTL_SERVICE_KEY = os.getenv("HSPTL_SERVICE_KEY", "Q7Knj2bDIIEEcUa+IssDHW01vO1JbDDmNzyarPtSuPBFJ0OPxjvLgwIi+aWtIKZt/4IHjIK6cBiFvXyBXD67dw==")
+MADMDTL_SERVICE_KEY = os.getenv("MADMDTL_SERVICE_KEY")
+HSPTL_SERVICE_KEY = os.getenv("HSPTL_SERVICE_KEY")
 
 def format_time_hhmm(val):
     if not val or val in ["0000", "00:00"]:

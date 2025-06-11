@@ -6,13 +6,14 @@ import requests
 import xml.etree.ElementTree as ET
 from math import radians, sin, cos, sqrt, atan2
 import os
+from dotenv import load_dotenv
 
 router = APIRouter()
-
+load_dotenv(dotenv_path="key.env")
 # API 설정
 class APIConfig:
     BASE_URL = "http://apis.data.go.kr/B552657/ErmctInfoInqireService"
-    SERVICE_KEY = os.getenv("EMERGENCY_SERVICE_KEY", "Q7Knj2bDIIEEcUa+IssDHW01vO1JbDDmNzyarPtSuPBFJ0OPxjvLgwIi+aWtIKZt/4IHjIK6cBiFvXyBXD67dw==")
+    SERVICE_KEY = os.getenv("EMERGENCY_SERVICE_KEY")
 
 # Pydantic 모델 정의
 class EmergencyFacilityItem(BaseModel):
@@ -165,7 +166,6 @@ async def search_emergency_facilities(
             ]):
                 continue
 
-            # 필요한 필드만 추출
             filtered_item = {
                 'hpid': item_dict.get('hpid'),
                 'dutyName': item_dict.get('dutyName'),
@@ -174,21 +174,10 @@ async def search_emergency_facilities(
                 'wgs84Lat': item_dict.get('wgs84Lat'),
                 'wgs84Lon': item_dict.get('wgs84Lon'),
                 'dgidIdName': item_dict.get('dgidIdName'),
+                # MKioskTy25가 None이면 '없음'으로 표시
+                'MKioskTy25': item_dict.get('MKioskTy25') if item_dict.get('MKioskTy25') is not None else '없음',
             }
-
-            # 거리 계산이 필요한 경우
-            if latitude and longitude:
-                try:
-                    lat = float(filtered_item['wgs84Lat'])
-                    lon = float(filtered_item['wgs84Lon'])
-                    distance = calculate_distance(latitude, longitude, lat, lon)
-                    if distance <= radius:
-                        filtered_item['distance'] = distance
-                        results.append(filtered_item)
-                except (ValueError, TypeError):
-                    continue
-            else:
-                results.append(filtered_item)
+            results.append(filtered_item)
         
         # 거리순 정렬
         if latitude and longitude:

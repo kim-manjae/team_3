@@ -1,10 +1,12 @@
-#backend/main.py
-from fastapi import FastAPI, Depends, HTTPException
+
+from fastapi import APIRouter, FastAPI, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from typing import List, Optional
+
+router = APIRouter()
 
 #1. PostgreSQL 연결 문자열
 DATABASE_URL = "postgresql://postgres:admin1234@database-1.ct8wqsmwwlb2.ap-northeast-2.rds.amazonaws.com:5432/postgres"
@@ -77,7 +79,7 @@ class UserOut(BaseModel):
         orm_mode = True  # ORM 객체를 Pydantic 모델로 변환 가능하게 함
 
 #11. 사용자 생성 또는 업데이트 API 엔드포인트
-@app.post("/user/")
+@router.post("/user/")
 def create_or_update_user(user: UserCreate, db: Session = Depends(get_db)):
     #주어진 이메일로 기존 사용자 조회
     db_user = db.query(User).filter(User.email == user.email).first()
@@ -116,13 +118,13 @@ def create_or_update_user(user: UserCreate, db: Session = Depends(get_db)):
         }
     
 #12. 모든 사용자 조회 (페이징 가능)
-@app.get("/user/", response_model = List[UserOut])
+@router.get("/user/", response_model = List[UserOut])
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = db.query(User).offset(skip).limit(limit).all()
     return users
 
 #13. 이메일 또는 닉네임으으로 특정 사용자 조회
-@app.get("/user/search", response_model = List[UserOut])
+@router.get("/user/search", response_model = List[UserOut])
 def search_users(email: Optional[str] = None, nickname: Optional[str] = None, db: Session = Depends(get_db)):
     query = db.query(User)
     if email:

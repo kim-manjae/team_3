@@ -8,13 +8,15 @@ import xml.etree.ElementTree as ET
 from math import radians, sin, cos, sqrt, atan2
 import threading
 import time
+import os
+from dotenv import load_dotenv
 
 router = APIRouter()
-
+load_dotenv(dotenv_path="key.env")
 # API 설정
 class APIConfig:
     BASE_URL = "http://apis.data.go.kr/B552657/HsptlAsembySearchService"
-    SERVICE_KEY = "Q7Knj2bDIIEEcUa+IssDHW01vO1JbDDmNzyarPtSuPBFJ0OPxjvLgwIi+aWtIKZt/4IHjIK6cBiFvXyBXD67dw=="
+    SERVICE_KEY = os.getenv("HSPTL_SERVICE_KEY")
 
 # Pydantic 모델 정의
 class MedicalFacility(BaseModel):
