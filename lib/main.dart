@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:project/service/social_login.dart';
-import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:kakao_flutter_sdk_common/kakao_flutter_sdk_common.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'package:kakao_flutter_sdk_common/kakao_flutter_sdk_common.dart';
+import 'package:project/service/social_login.dart';      // LoginWidget 정의된 파일
+import 'package:project/chat_bot/chatbot_screen.dart';  // 다른 화면들
+import 'package:project/hospital/hospital_main.dart';
+import 'package:project/profile/profile_screen.dart';
+import 'package:project/reservation/reservation_list_page.dart';
+import 'package:project/splash/splash_screen.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 /// 애플리케이션의 진입점
 ///
@@ -82,7 +88,7 @@ class MyApp extends StatelessWidget {
       supportedLocales: context.supportedLocales,
       locale: context.locale,
       // 앱의 초기 화면을 병원 메인 페이지로 설정
-      home: LoginWidget(),
+      home: const SplashScreen(),
     );
   }
 }

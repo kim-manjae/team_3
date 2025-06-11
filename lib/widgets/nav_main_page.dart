@@ -8,13 +8,33 @@ import '../widgets/bottom_nav_bar.dart';
 
 
 class nav_MainPage extends StatefulWidget {
-  nav_MainPage({Key? key}) : super(key: key);
+  final int initialIndex;
+  const nav_MainPage({Key? key, this.initialIndex = 0}) : super(key: key);
+
   @override
-  State<nav_MainPage> createState() => _nav_MainPageState();
+  _nav_MainPageState createState() => _nav_MainPageState();
 }
 
 class _nav_MainPageState extends State<nav_MainPage> {
-  int _currentIndex = 0;
+  late int _currentIndex;
+
+  @override
+  void initState(){
+    super.initState();
+    _currentIndex = widget.initialIndex; // 초기값 설정
+  }
+
+  @override
+  void didUpdateWidget(covariant nav_MainPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.initialIndex != oldWidget.initialIndex) {
+      setState(() {
+        _currentIndex = widget.initialIndex;
+      });
+    }
+  }
+
   final List<Widget> _pages = [
     HospitalMainPage(),
     ChatbotScreen(),
