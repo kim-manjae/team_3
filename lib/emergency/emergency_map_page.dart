@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
+import '../state/app_state.dart';
 import 'emergency_service.dart';
 import 'emergency_model.dart';
 import '../component/medical_facility_detailpage.dart';
@@ -31,52 +33,82 @@ class _EmergencyMapPageState extends State<EmergencyMapPage> {
 
   Future<void> _initLocationAndFetch() async {
     try {
-      // 위치 권한 요청 및 현재 위치 가져오기
-      LocationPermission permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
-        setState(() {
-          _loading = false;
-          _errorMessage = '위치 권한이 필요합니다. 설정에서 권한을 허용해주세요.';
-        });
-        return;
+      final appState = context.read<AppState>();
+      Position? pos = appState.position;
+
+      // 위치 정보가 없는 경우에만 새로 가져오기
+      if (pos == null) {
+        LocationPermission permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever) {
+          setState(() {
+            _loading = false;
+            _errorMessage = '위치 권한이 필요합니다. 설정에서 권한을 허용해주세요.';
+          });
+          return;
+        }
+
+        pos = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high);
+        appState.position = pos;
       }
 
-      Position pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       setState(() => _currentPosition = pos);
 
-      // 행정구역명(시도, 시군구) 추출 (예시로 서울특별시, 강남구 사용)
-      String stage1 = "서울특별시";
-      String stage2 = "강남구";
-      // 실제 앱에서는 reverse geocoding 등으로 자동 추출 필요
+      // 캐시된 응급의료기관 데이터 사용
+      List<EmergencyFacility>? cachedFacilities = appState.emergencyFacilities;
 
-      // 응급의료기관 데이터 가져오기
-      List<EmergencyFacility> facilities = await EmergencyService.fetchNearbyEmergency(
-        stage1: stage1,
-        stage2: stage2,
-        latitude: pos.latitude,
-        longitude: pos.longitude,
-      );
+      if (cachedFacilities == null || cachedFacilities.isEmpty) {
+        setState(() {
+          _facilities = []; // 빈 리스트로 설정
+          _markers = {}; // 빈 마커 세트로 설정
+          _loading = false;
+          _errorMessage = null; // 에러 메시지를 null로 설정
+        });
+      } else {
+        setState(() {
+          _facilities = cachedFacilities;
+          _markers = cachedFacilities
+              .where((f) => f.wgs84Lat != null && f.wgs84Lon != null)
+              .map((f) {
+            double lat = double.parse(f.wgs84Lat!);
+            double lon = double.parse(f.wgs84Lon!);
+            return NMarker(
+              id: f.hpid ?? f.dutyName ?? '',
+              position: NLatLng(lat, lon),
+            )
+              ..setCaption(NOverlayCaption(
+                text: f.dutyName ?? '',
+                textSize: 14,
+                color: Colors.red,
+              ));
+          }).toSet();
+          _loading = false;
+          _errorMessage = null;
+        });
 
-      setState(() {
-        _facilities = facilities;
-        _markers = facilities
-            .where((f) => f.wgs84Lat != null && f.wgs84Lon != null)
-            .map((f) {
-          double lat = double.parse(f.wgs84Lat!);
-          double lon = double.parse(f.wgs84Lon!);
-          return NMarker(
-            id: f.hpid ?? f.dutyName ?? '',
-            position: NLatLng(lat, lon),
-          )..setCaption(NOverlayCaption(
-            text: f.dutyName ?? '',
-            textSize: 14,
-            color: Colors.red,
-          ));
-        })
-            .toSet();
-        _loading = false;
-        _errorMessage = null;
-      });
+        setState(() {
+          _facilities = cachedFacilities;
+          _markers = cachedFacilities
+              .where((f) => f.wgs84Lat != null && f.wgs84Lon != null)
+              .map((f) {
+            double lat = double.parse(f.wgs84Lat!);
+            double lon = double.parse(f.wgs84Lon!);
+            return NMarker(
+              id: f.hpid ?? f.dutyName ?? '',
+              position: NLatLng(lat, lon),
+            )
+              ..setCaption(NOverlayCaption(
+                text: f.dutyName ?? '',
+                textSize: 14,
+                color: Colors.red,
+              ));
+          })
+              .toSet();
+          _loading = false;
+          _errorMessage = null;
+        });
+      }
     } catch (e) {
       setState(() {
         _loading = false;
@@ -205,6 +237,36 @@ class _EmergencyMapPageState extends State<EmergencyMapPage> {
               });
             },
           ),
+
+          //---------------
+          // 응급의료기관이 주변에 없을때 메시지 표시
+    if (_facilities.isEmpty)
+    Positioned(
+    top: 16,
+    left: 16,
+    right: 16,
+    child: Container(
+    padding: EdgeInsets.all(8),
+    decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(8),
+    boxShadow: [
+    BoxShadow(
+    color: Colors.black26,
+    blurRadius: 4,
+    ),
+    ],
+    ),
+    child: Text(
+    'emergency.no_facility'.tr(),
+    textAlign: TextAlign.center,
+    style: TextStyle(
+    color: Colors.red,
+    fontWeight: FontWeight.bold,
+    ),
+    ),
+    ),
+    ),
 
           // 하단에 응급의료기관 목록 표시
           if (_isListVisible)

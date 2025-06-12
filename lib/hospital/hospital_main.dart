@@ -71,11 +71,14 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.indigo.shade50,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: Text('나만의 AI 닥터 에이닥', style: TextStyle(color: Colors.black87)),
+        title: Text('메인 화면',
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black87),),
         actions: [
           IconButton(
             icon: Icon(Icons.language),
@@ -105,39 +108,39 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                   ),
                 ),
                 SizedBox(height: 10),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.blue.shade50, Colors.blue.shade100],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '뭘 넣을까요',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Center(
-                        child: Text(
-                          '여기에 글자 말고 배너?',
-                          style: TextStyle(fontSize: 13, color: Colors.black87),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
+                // Container(
+                //   width: double.infinity,
+                //   padding: const EdgeInsets.all(20),
+                //   decoration: BoxDecoration(
+                //     gradient: LinearGradient(
+                //       colors: [Colors.blue.shade50, Colors.blue.shade100],
+                //       begin: Alignment.topLeft,
+                //       end: Alignment.bottomRight,
+                //     ),
+                //     borderRadius: BorderRadius.circular(20),
+                //   ),
+                //   child: Column(
+                //     crossAxisAlignment: CrossAxisAlignment.start,
+                //     children: [
+                //       Text(
+                //         '뭘 넣을까요',
+                //         style: TextStyle(
+                //           fontSize: 18,
+                //           fontWeight: FontWeight.bold,
+                //           color: Colors.black87,
+                //         ),
+                //       ),
+                //       SizedBox(height: 8),
+                //       Center(
+                //         child: Text(
+                //           '여기에 글자 말고 배너?',
+                //           style: TextStyle(fontSize: 13, color: Colors.black87),
+                //         ),
+                //       ),
+                //     ],
+                //   ),
+                // ),
+                // const SizedBox(height: 20),
 
                 //병원 및 약국 찾기
                 Row(
@@ -153,30 +156,33 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                             ),
                           );
                         },
-                          child: PolygonOverlay(
-                            child: Container(
+                          child: Container(
                               width: double.infinity,
-                              height: 170,
+                              height: 200,
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.blueAccent.shade700,
+                                color: Colors.white,
                                 borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Colors.blueAccent.shade100,
+                                  width: 1,
+                                ),
                               ),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
                                     Icons.local_hospital,
-                                    size: 48,
-                                    color: Colors.white,
+                                    size: 100,
+                                    color: Colors.blueAccent.shade700,
                                   ),
-                                  SizedBox(height: 12),
+                                  SizedBox(height: 0),
                                   Text(
                                     '병원 찾기',
                                     style: TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 20,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                      color: Colors.black87,
                                     ),
                                   ),
                                 ],
@@ -184,7 +190,6 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                             ),
                         ),
                       ),
-                    ),
                     SizedBox(width: 16),
                     Expanded(
                       child: GestureDetector(
@@ -196,35 +201,42 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                             ),
                           );
                         },
+                        // child: PolygonOverlay(
                         child: Container(
-                          height: 170,
+                          width: double.infinity,
+                          height: 200,
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.blueAccent.shade700,
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.blueAccent.shade100,
+                              width: 1,
+                            ),
                           ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
                                 Icons.local_pharmacy,
-                                size: 48,
-                                color: Colors.white,
+                                size: 100,
+                                color: Colors.blueAccent.shade700,
                               ),
-                              SizedBox(height: 12),
+                              SizedBox(height: 0),
                               Text(
                                 '약국 찾기',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: Colors.black87,
                                 ),
                               ),
                             ],
                           ),
                         ),
+                        ),
                       ),
-                    ),
+                    // ),
                   ],
                 ),
                 SizedBox(height: 20),
@@ -242,36 +254,48 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                     width: double.infinity,
                     padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
                     decoration: BoxDecoration(
-                      color: Colors.blueAccent.shade700,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.blueAccent.shade100,
+                        width: 1,
+                      ),
                     ),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.mark_unread_chat_alt_rounded,
-                              color: Colors.white,
-                              size: 30,
+                            Image.asset(
+                              'assets/images/aidoc_logo.png',
+                              width: 100,    // 아이콘 크기 대신 너비
+                              height: 100,   // 높이 지정
+                              fit: BoxFit.contain,
                             ),
                             SizedBox(width: 12),
-                            Text(
-                              '챗봇으로 대화하기',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                            Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '챗봇으로 대화하기',
+                                      style: TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w900,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      '챗봇으로 대화를 해보세요. \n길찾기부터 병원까지 한번에!',
+                                      style: TextStyle(fontSize: 13, color: Colors.black54),
+                                      textAlign: TextAlign.start,
+                                    ),
+                                  ],
+                                ),
                             ),
                           ],
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          '챗봇으로 대화를 해보세요. \n길찾기부터 병원까지 한번에!',
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                          textAlign: TextAlign.start,
                         ),
                       ],
                     ),
@@ -316,54 +340,6 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
   }
 }
 
-/// 1) 좌우로 부드럽게 흔들리는 애니메이션
-class ShakingBackground extends StatefulWidget {
-  final Widget child;
-
-  const ShakingBackground({required this.child, super.key});
-
-  @override
-  _ShakingBackgroundState createState() => _ShakingBackgroundState();
-}
-
-class _ShakingBackgroundState extends State<ShakingBackground>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-    _anim = Tween<double>(
-      begin: -10,
-      end: 10,
-    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOutSine));
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(_anim.value, 0),
-          child: child,
-        );
-      },
-      child: widget.child,
-    );
-  }
-}
 
 /// 2) 반투명 폴리곤을 오버레이하는 CustomPainter
 class PolygonOverlay extends StatelessWidget {
@@ -387,7 +363,7 @@ class _PolygonPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint =
         Paint()
-          ..color = Colors.white.withOpacity(0.1)
+          ..color = Colors.white10.withOpacity(0.3)
           ..style = PaintingStyle.fill;
 
     final path =
