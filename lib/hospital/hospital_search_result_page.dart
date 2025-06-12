@@ -1,6 +1,8 @@
 // 검색/탭/리스트 화면만 담당
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:project/state/app_state.dart';
+import 'package:provider/provider.dart';
 import '../component/medical_facility.dart';
 import '../component/medical_facility_detailpage.dart';
 import 'dart:math';
@@ -12,8 +14,7 @@ import 'widget/medical_facility_card.dart';
 const String apiBase = 'http://10.0.2.2:8000';
 
 class HospitalSearchResultPage extends StatefulWidget {
-  final Position? currentPosition;
-  const HospitalSearchResultPage({Key? key, this.currentPosition}) : super(key: key);
+  const HospitalSearchResultPage({Key? key}) : super(key: key);
 
   @override
   _HospitalSearchResultPageState createState() => _HospitalSearchResultPageState();
@@ -38,7 +39,6 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
     super.initState();
     _searchController.text = '';
     _scrollController.addListener(_scrollListener);
-    currentPosition = widget.currentPosition;
     _initializeSubjects();
     _tabController = TabController(length: subjects.length, vsync: this);
     _tabController.addListener(() {
@@ -49,6 +49,8 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
         _searchBySubject(subjects[_tabController.index]);
       }
     });
+
+    // 화면 진입시 자동으로 내 주변 병원 표시
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _showNearbyHospitals();
     });
@@ -301,58 +303,6 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
     }
   }
 
-  Future<void> _showNearbyHospitals() async {
-    if (!mounted) return;
-    setState(() { isLoading = true; });
-    try {
-      Position position = currentPosition ?? await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      if (!mounted) return;
-      setState(() { currentPosition = position; });
-
-      final response = await http.get(Uri.parse('$apiBase/api/medical/nearby?latitude=${position.latitude}&longitude=${position.longitude}&radius=10000&type=hospital'));
-      if (!mounted) return;
-
-      if (response.statusCode == 200) {
-        final data = json.decode(utf8.decode(response.bodyBytes));
-        final List items = data['items'] ?? [];
-        List<MedicalFacility> hospitals = items.map((item) => MedicalFacility.fromJson(item)).toList();
-        for (var facility in hospitals) {
-          double? lat = parseCoordinate(facility.wgs84Lat);
-          double? lon = parseCoordinate(facility.wgs84Lon);
-          if (lat != null && lon != null) {
-            facility.distance = calculateDistance(
-              position.latitude,
-              position.longitude,
-              lat,
-              lon,
-            );
-          } else {
-            facility.distance = double.infinity;
-          }
-        }
-        hospitals.sort((a, b) {
-          double ad = a.distance ?? double.infinity;
-          double bd = b.distance ?? double.infinity;
-          return ad.compareTo(bd);
-        });
-        if (mounted) {
-          setState(() {
-            facilities = hospitals;
-            isLoading = false;
-          });
-        }
-      } else {
-        if (mounted) {
-          setState(() { isLoading = false; });
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() { isLoading = false; });
-      }
-    }
-  }
-
   double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
     const double earthRadius = 6371000;
     final double dLat = _toRadians(lat2 - lat1);
@@ -450,10 +400,17 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
                   onTap: () {
                     _tabController.animateTo(idx);
                     if (idx == 0) {
-                      _showNearbyHospitals();
+                      final cached = context.read<AppState>().hospitals;
+                      if (cached != null) {
+                        setState(() {
+                          facilities = List.from(cached);
+                          _totalCount = cached.length;
+                        });
+                      }
                     } else {
                       _searchBySubject(subjects[idx]);
                     }
+
                   },
                   child: Container(
                     margin: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
@@ -527,6 +484,83 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
       return '${distance.round()}m';
     } else {
       return '${(distance / 1000).toStringAsFixed(1)}km';
+    }
+  }
+
+  void _showNearbyHospitals() async {
+    if (!mounted) return;
+    setState(() { isLoading = true; });
+    try {
+      // AppState에서 저장된 위치 정보 가져오기
+      final appState = context.read<AppState>();
+      Position? position = appState.position;
+      
+      if (position == null) {
+        throw Exception('위치 정보를 찾을 수 없습니다.');
+      }
+
+      // 이미 캐시된 병원 목록이 있는지 확인
+      List<MedicalFacility>? cachedHospitals = appState.hospitals;
+      if (cachedHospitals != null && cachedHospitals.isNotEmpty) {
+        setState(() {
+          facilities = cachedHospitals;
+          isLoading = false;
+        });
+        return;
+      }
+
+      // 캐시된 데이터가 없는 경우에만 API 호출
+      final response = await http.get(
+        Uri.parse('$apiBase/api/medical/nearby?latitude=${position.latitude}&longitude=${position.longitude}&radius=10000&type=hospital')
+      );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final data = json.decode(utf8.decode(response.bodyBytes));
+        final List items = data['items'] ?? [];
+        List<MedicalFacility> hospitals = items.map((item) => MedicalFacility.fromJson(item)).toList();
+        
+        // 거리 계산 및 정렬
+        for (var facility in hospitals) {
+          double? lat = parseCoordinate(facility.wgs84Lat);
+          double? lon = parseCoordinate(facility.wgs84Lon);
+          if (lat != null && lon != null) {
+            facility.distance = calculateDistance(
+              position.latitude,
+              position.longitude,
+              lat,
+              lon,
+            );
+          } else {
+            facility.distance = double.infinity;
+          }
+        }
+        
+        hospitals.sort((a, b) {
+          double ad = a.distance ?? double.infinity;
+          double bd = b.distance ?? double.infinity;
+          return ad.compareTo(bd);
+        });
+
+        // 상태 업데이트 및 캐시 저장
+        if (mounted) {
+          setState(() {
+            facilities = hospitals;
+            isLoading = false;
+          });
+          appState.hospitals = hospitals;  // 캐시에 저장
+        }
+      } else {
+        throw Exception('서버 오류가 발생했습니다.');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() { isLoading = false; });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()))
+        );
+      }
     }
   }
 }

@@ -5,6 +5,10 @@ import '../component/medical_facility.dart';
 class AppState extends ChangeNotifier {
   Position? _position;
   List<MedicalFacility>? _pharmacies;
+  List<MedicalFacility>? hospitals;
+
+  Position? currentPosition;
+  List<MedicalFacility>? nearbyHospitals;
 
   Position? get position => _position;
   List<MedicalFacility>? get pharmacies => _pharmacies;
@@ -17,6 +21,16 @@ class AppState extends ChangeNotifier {
 
   set pharmacies(List<MedicalFacility>? list) {
     _pharmacies = list;
+    notifyListeners();
+  }
+
+  void setCurrentPosition(Position pos) {
+    currentPosition = pos;
+    notifyListeners();
+  }
+
+  void setNearbyHospitals(List<MedicalFacility> list) {
+    nearbyHospitals = list;
     notifyListeners();
   }
 }

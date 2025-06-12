@@ -149,9 +149,7 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                             context,
                             MaterialPageRoute(
                               builder:
-                                  (context) => HospitalSearchResultPage(
-                                    currentPosition: currentPosition,
-                                  ),
+                                  (context) => HospitalSearchResultPage(),
                             ),
                           );
                         },
