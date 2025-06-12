@@ -2,12 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:project/chat_bot/chatbot_screen.dart';
 import '../pharmacy/pharmacy_find.dart';
+import '../reservation/reservation_list_page.dart';
+import '../widgets/nav_main_page.dart';
 import 'hospital_search_result_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../emergency/emergency_box.dart';
 import '../emergency/emergency_map_page.dart';
+
 
 class HospitalMainPage extends StatefulWidget {
   @override
@@ -232,7 +234,9 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => ChatbotScreen()),
+                      MaterialPageRoute(
+                    builder: (context) => nav_MainPage(initialIndex: 1),
+                  ),
                     );
                   },
 
@@ -280,7 +284,7 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => ChatbotScreen()),
+                      MaterialPageRoute(builder: (context) => EmergencyMapPage()),
                     );
                   },
                   child: Container(

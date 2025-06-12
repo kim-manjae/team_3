@@ -6,6 +6,7 @@ from emergency_search import router as emergency_search_router
 from chatbot import router as chatbot_router
 from dbmain import router as dbmain_router
 
+
 app = FastAPI(
     title="병원/약국 찾기 API",
     description="공공데이터포털 의료기관 정보를 제공하는 API 서비스",

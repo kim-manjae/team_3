@@ -96,7 +96,7 @@ class _PharmacyFindPageState extends State<PharmacyFindPage> {
 
   Future<Map<String, dynamic>> _initializeData() async {
     try {
-      // 1. 위치 권한 확인
+      // 1. 위치 권한 확인 > 오래걸림
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -109,12 +109,12 @@ class _PharmacyFindPageState extends State<PharmacyFindPage> {
         throw Exception('location_permission_denied_forever'.tr());
       }
 
-      // 2. 현재 위치 가져오기
+      // 2. 현재 위치 가져오기 > 오래걸림.
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      // 3. 약국 데이터 가져오기
+      // 3. 약국 데이터 가져오기 > 네트워크 요청, 대량 응답 파싱 > 오래 걸림
       final url = Uri.parse('$dataGoKrApiUrl'
           '?serviceKey=${Uri.encodeComponent(dataGoKrServiceKey)}'
           '&pageNo=1'
@@ -128,6 +128,7 @@ class _PharmacyFindPageState extends State<PharmacyFindPage> {
 
       List<MedicalFacility> allPharmacies = [];
       try {
+        // # xml 파싱 > 대량 노드 처리로 오래 걸림
         final document = XmlDocument.parse(utf8.decode(response.bodyBytes));
         final items = document.findAllElements('item');
 
@@ -154,7 +155,7 @@ class _PharmacyFindPageState extends State<PharmacyFindPage> {
         throw Exception('pharmacy.parse_error'.tr());
       }
 
-      // 4. 500m 이내 약국 필터링
+      // 4. 500m 이내 약국 필터링 > 반복문 내부에 거리계산
       List<MedicalFacility> nearbyPharmacies = allPharmacies.where((facility) {
         if (facility.wgs84Lat != null && facility.wgs84Lon != null) {
           try {

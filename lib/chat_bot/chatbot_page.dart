@@ -1,0 +1,185 @@
+import 'package:flutter/material.dart';
+import 'chatbot_message.dart';
+import 'chatbot_bubble.dart';
+import 'chatbot_input.dart';
+import 'chatbot_service.dart';
+import 'package:easy_localization/easy_localization.dart';
+
+class ChatbotPage extends StatefulWidget {
+  const ChatbotPage({Key? key}) : super(key: key);
+
+  @override
+  State<ChatbotPage> createState() => _ChatbotPageState();
+}
+
+class _ChatbotPageState extends State<ChatbotPage> {
+  final List<ChatbotMessage> _messages = [
+    ChatbotMessage(
+      text: 'chatbot.greeting'.tr(),
+      sender: ChatSender.bot,
+    ),
+  ];
+  final ChatbotService _service = ChatbotService();
+  bool _isLoading = false;
+  final ScrollController _scrollController = ScrollController();
+  final FocusNode _inputFocusNode = FocusNode();
+
+  void _scrollToBottom({bool instant = false}) {
+    if (_scrollController.hasClients) {
+      if (instant) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      } else {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    } else {
+      Future.delayed(const Duration(milliseconds: 100), () => _scrollToBottom(instant: instant));
+    }
+  }
+
+  void _sendMessage(String text) async {
+    setState(() {
+      _messages.add(ChatbotMessage(text: text, sender: ChatSender.user));
+      _isLoading = true;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+
+    final langCode = context.locale.languageCode;
+    final reply = await _service.sendMessage(text, langCode);
+
+    // 챗봇 답변에서 명령어 감지
+    final command = _service.parseCommand(reply);
+    final replyAction = command == 'reservation' ? 'hospital' : command;
+
+    setState(() {
+      _messages.add(ChatbotMessage(
+        text: reply,
+        sender: ChatSender.bot,
+        action: command != null ? replyAction : null,
+      ));
+      _isLoading = false;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+
+    // 입력창에 포커스 유지
+    _inputFocusNode.requestFocus();
+  }
+
+  void _navigateByCommand(String command) {
+    if (command == 'hospital') {
+      Navigator.pushNamed(context, '/hospital_search');
+    } else if (command == 'pharmacy') {
+      Navigator.pushNamed(context, '/pharmacy_nearby');
+    } else if (command == 'emergency') {
+      Navigator.pushNamed(context, '/emergency_map');
+    } else if (command == 'reservation') {
+      Navigator.pushNamed(context, '/reservation');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      appBar: AppBar(title: Text('chatbot.title'.tr())),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: _messages.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    // 인사말 메시지
+                    return ChatbotBubble(message: _messages[0]);
+                  }
+                  if (index == 1) {
+                    // 네비게이션 버튼
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.local_hospital),
+                            label: Text('chatbot.find_hospital'.tr()),
+                            onPressed: () => _onQuickAction('hospital'),
+                          ),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.local_pharmacy),
+                            label: Text('chatbot.find_pharmacy'.tr()),
+                            onPressed: () => _onQuickAction('pharmacy'),
+                          ),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.emergency),
+                            label: Text('chatbot.find_emergency'.tr()),
+                            onPressed: () => _onQuickAction('emergency'),
+                          ),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.calendar_today),
+                            label: Text('chatbot.make_reservation'.tr()),
+                            onPressed: () => _onQuickAction('reservation'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  // 나머지 메시지
+                  return ChatbotBubble(
+                    message: _messages[index - 1],
+                    onAction: (action) => _navigateByCommand(action),
+                  );
+                },
+              ),
+            ),
+            if (_isLoading)
+              const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: CircularProgressIndicator(),
+              ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ChatbotInput(onSend: _sendMessage, focusNode: _inputFocusNode),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _onQuickAction(String action) {
+    String message = '';
+    String route = '';
+    switch (action) {
+      case 'hospital':
+        message = 'chatbot.action_hospital'.tr();
+        route = '/hospital_search';
+        break;
+      case 'pharmacy':
+        message = 'chatbot.action_pharmacy'.tr();
+        route = '/pharmacy_nearby';
+        break;
+      case 'emergency':
+        message = 'chatbot.action_emergency'.tr();
+        route = '/emergency_map';
+        break;
+      case 'reservation':
+        message = 'chatbot.action_reservation'.tr();
+        route = '/hospital_search';
+        break;
+    }
+    setState(() {
+      _messages.add(ChatbotMessage(text: message, sender: ChatSender.bot));
+    });
+    Future.delayed(const Duration(milliseconds: 500), () {
+      Navigator.pushNamed(context, route);
+    });
+  }
+}

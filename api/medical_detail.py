@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 router = APIRouter()
 load_dotenv(dotenv_path="key.env")
-# 서비스키는 환경변수 또는 별도 설정 파일에서 불러오는 것을 권장합니다.
+
 MADMDTL_SERVICE_KEY = os.getenv("MADMDTL_SERVICE_KEY")
 HSPTL_SERVICE_KEY = os.getenv("HSPTL_SERVICE_KEY")
 
