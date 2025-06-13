@@ -229,7 +229,7 @@ class _EmergencyMapPageState extends State<EmergencyMapPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => MedicalFacilityDetailPage(facility: facility.toMedicalFacility(), fromMainHospitalSearch: false),
+                      builder: (_) => MedicalFacilityDetailPage(facility: facility.toMedicalFacility(), ),
                     ),
                   );
                 });

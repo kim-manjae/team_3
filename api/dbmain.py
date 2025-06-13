@@ -5,6 +5,11 @@ from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from typing import List, Optional
+from dotenv import load_dotenv
+import os
+
+load_dotenv('key.env')
+
 
 router = APIRouter()
 

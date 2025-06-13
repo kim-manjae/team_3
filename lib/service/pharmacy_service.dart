@@ -11,9 +11,9 @@ const _apiUrl = 'https://apis.data.go.kr/B552657/ErmctInsttInfoInqireService/get
 
 class PharmacyService {
   static Future<List<MedicalFacility>> fetchNearbyPharmacies(Position position) async {
-    final serviceKey = dotenv.env['DATA_GOKR_KEY'];
+    final serviceKey = dotenv.env['PHARMACY_SERVICE_KEY'];
     if (serviceKey == null) {
-      throw Exception('DATA_GOKR_KEY not found in .env');
+      throw Exception('PHARMACY_SERVICE_KEY not found in ..env');
     }
 
     final uri = Uri.parse(

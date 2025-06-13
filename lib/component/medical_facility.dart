@@ -217,11 +217,6 @@ class MedicalFacility {
         return "운영 시간 정보 판단 불가 (요일 오류)";
     }
 
-    // 24시간 운영 예외처리
-    if ((startTimeStr == '2400' || startTimeStr == '24:00') && (endTimeStr == '2400' || endTimeStr == '24:00')) {
-      return "운영중";
-    }
-
     // 공휴일 체크 로직은 API에서 공휴일 정보를 제공하지 않는 이상 클라이언트에서 정확히 판단하기 어려우므로 일단 제외.
     // dutyTime8s, dutyTime8c는 공휴일 시간으로 사용될 수 있으나, 현재 날짜가 공휴일인지 판단하는 로직 필요
 

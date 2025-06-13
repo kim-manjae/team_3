@@ -280,7 +280,7 @@ class _NearbyMedicalMapWidgetState extends State<NearbyMedicalMapWidget> {
                                       MaterialPageRoute(
                                         builder: (_) => MedicalFacilityDetailPage(
                                           facility: facility,
-                                          fromMainHospitalSearch: false,
+                                          // fromMainHospitalSearch: false,
                                         ),
                                       ),
                                     );

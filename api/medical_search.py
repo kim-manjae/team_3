@@ -441,3 +441,17 @@ async def get_nearby_medical_facilities(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 내부 오류: {str(e)}")
+
+@router.get("/api/medical/all")
+async def get_all_medical_facilities():
+    hospitals = HOSPITAL_CACHE if HOSPITAL_CACHE else get_hospital_data_fallback()
+    for h in hospitals:
+        process_operating_hours(h)
+        h['is_open'] = is_facility_open(h)
+        h['today_open_status'] = get_today_open_status(h)
+    return {
+        "success": True,
+        "items": hospitals,
+        "total_count": len(hospitals),
+        "timestamp": datetime.now().isoformat()
+    }

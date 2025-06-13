@@ -52,8 +52,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _initializeApp() async {
     try {
-      // 1) .env 로드
-      await dotenv.load(fileName: ".env");
+      // 1) ..env 로드
+      await dotenv.load(fileName: "..env");
 
       // 2) SDK 초기화
       final naverId = dotenv.env['NAVER_MAP_CLIENT_ID']!;

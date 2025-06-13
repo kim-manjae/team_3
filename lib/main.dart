@@ -30,7 +30,7 @@ void main() async {
   // 다국어 지원 초기화
   await EasyLocalization.ensureInitialized();
 
-  // 1) .env 로드
+  // 1) ..env 로드
   await dotenv.load(fileName: ".env");
 
   // 2) 환경변수에서 키 가져오기

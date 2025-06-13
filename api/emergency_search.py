@@ -7,6 +7,8 @@ import xml.etree.ElementTree as ET
 from math import radians, sin, cos, sqrt, atan2
 import os
 from dotenv import load_dotenv
+import threading
+import time
 
 router = APIRouter()
 load_dotenv(dotenv_path="key.env")
@@ -98,6 +100,54 @@ class SearchResponse(BaseModel):
     items: List[EmergencyFacilityItem] = Field(description="검색 결과 목록")
     timestamp: str = Field(description="조회 시간")
     current_location: Optional[Location] = Field(None, description="현재 위치 정보")
+
+EMERGENCY_CACHE = []
+EMERGENCY_CACHE_LAST_UPDATED = None
+
+def fetch_and_cache_emergencies():
+    global EMERGENCY_CACHE, EMERGENCY_CACHE_LAST_UPDATED
+    try:
+        params = {
+            'serviceKey': APIConfig.SERVICE_KEY,
+            'type': 'xml',
+            'pageNo': 1,
+            'numOfRows': 500,
+        }
+        url = f"{APIConfig.BASE_URL}/getEgytBassInfoInqire"
+        response = requests.get(url, params=params, timeout=120, verify=False)
+        if response.status_code == 200:
+            root = ET.fromstring(response.text)
+            items = root.findall('.//item')
+            cache = []
+            for item in items:
+                item_dict = {child.tag: child.text for child in item}
+                cache.append(item_dict)
+            EMERGENCY_CACHE = cache
+            EMERGENCY_CACHE_LAST_UPDATED = datetime.now()
+            print(f"[응급의료기관 전체 데이터 캐싱 완료] {len(EMERGENCY_CACHE)}건")
+        else:
+            print(f"[응급의료기관 전체 데이터 캐싱 실패] {response.status_code}: {response.text}")
+    except Exception as e:
+        print(f"[응급의료기관 전체 데이터 캐싱 예외] {e}")
+
+def schedule_emergency_cache_refresh(interval_sec=86400):
+    def refresh():
+        while True:
+            fetch_and_cache_emergencies()
+            time.sleep(interval_sec)
+    threading.Thread(target=refresh, daemon=True).start()
+
+schedule_emergency_cache_refresh()
+
+@router.get("/api/emergency/all")
+async def get_all_emergency_facilities():
+    emergencies = EMERGENCY_CACHE
+    return {
+        "success": True,
+        "items": emergencies,
+        "total_count": len(emergencies),
+        "timestamp": datetime.now().isoformat()
+    }
 
 def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     R = 6371  # 지구의 반경 (km)

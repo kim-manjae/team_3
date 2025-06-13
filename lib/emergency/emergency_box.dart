@@ -10,8 +10,7 @@ class EmergencyBox extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8
-            , horizontal: 16),
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.red[100],
