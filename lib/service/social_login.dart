@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
+
 //소셜 로그인 관련 패키지
 import 'package:flutter_naver_login/interface/types/naver_login_status.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:flutter_naver_login/flutter_naver_login.dart';
-import 'database_service.dart';   //DB 연동을 위한 사용자 정의 클래스
+import 'database_service.dart'; //DB 연동을 위한 사용자 정의 클래스
 import 'email_auth_widget.dart';
 
 //로그인 플랫폼 구분용 enum
-enum LoginPlatform {google, kakao, naver, local,}
+enum LoginPlatform { google, kakao, naver, local, }
 //로그인 위젯(상태 관리가 필요하므로 StatefulWidget사용)
-class LoginWidget extends StatefulWidget{
+class LoginWidget extends StatefulWidget {
   const LoginWidget({super.key});
 
   @override
@@ -18,16 +19,17 @@ class LoginWidget extends StatefulWidget{
 }
 
 class _LoginWidgetState extends State<LoginWidget> {
-  bool isLoggedIn = false;          //현재 로그인 여부
+  bool isLoggedIn = false; //현재 로그인 여부
   bool _showLocalLogin = false;
-  String? nickname;                 //로그인한 사용자의 닉네임 (카카오, 네이버용)
-  String? email;                    //로그인한 사용자의 이메일 (구글용)
-  String? loginPlatform;            //현재 로그인된 플랫폼
-  String? profileImage;             //프로필 이미지 URL (카카오 전용)
-  GoogleSignInAccount? _user;       //로그인된 구글 사용자 정보
+  String? nickname; //로그인한 사용자의 닉네임 (카카오, 네이버용)
+  String? email; //로그인한 사용자의 이메일 (구글용)
+  String? loginPlatform; //현재 로그인된 플랫폼
+  String? profileImage; //프로필 이미지 URL (카카오 전용)
+  GoogleSignInAccount? _user; //로그인된 구글 사용자 정보
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile', 'openid'],
   );
+
   //DB 저장을 위한 서비스 인스턴스
   final DatabaseService _db = DatabaseService();
 
@@ -63,7 +65,8 @@ class _LoginWidgetState extends State<LoginWidget> {
   }
 
   //로컬 로그인 성공 처리
-  Future<void> loginWithLocal(String email, String nickname, String password) async{
+  Future<void> loginWithLocal(String email, String nickname,
+      String password) async {
     print('로컬 계정 로그인 성공');
     await _db.saveUserInfo(
       email: email,
@@ -84,7 +87,7 @@ class _LoginWidgetState extends State<LoginWidget> {
   Future<void> loginWithGoogle() async {
     try {
       final account = await _googleSignIn.signIn();
-      if (account == null) return;  //로그인 취소 시 종료
+      if (account == null) return; //로그인 취소 시 종료
 
       await _updateLoginState(
         loggedIn: true,
@@ -104,7 +107,7 @@ class _LoginWidgetState extends State<LoginWidget> {
         nickname: account.displayName ?? '익명',
         email: account.email,
         loginPlatform: 'google',
-        profileImage: profileImage ?? '',  //Google 로그인의 경우 빈 문자열 전달
+        profileImage: profileImage ?? '', //Google 로그인의 경우 빈 문자열 전달
       );
     } catch (e) {
       print('Google sign-in error : $e');
@@ -137,7 +140,8 @@ class _LoginWidgetState extends State<LoginWidget> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('카카오 계정에 이메일이 없거나 제공에 동의하지 않았습니다. 이메일 제공 설정을 확인해주세요.'),
+              content: Text(
+                  '카카오 계정에 이메일이 없거나 제공에 동의하지 않았습니다. 이메일 제공 설정을 확인해주세요.'),
             ),
           );
         }
@@ -210,13 +214,13 @@ class _LoginWidgetState extends State<LoginWidget> {
   Future <void> logout() async {
     try {
       if (loginPlatform == 'google') {
-        await _googleSignIn.signOut();      //구글 로그아웃
+        await _googleSignIn.signOut(); //구글 로그아웃
         print('Google 계정 로그아웃 성공');
       } else if (loginPlatform == 'kakao') {
-        await UserApi.instance.logout();    //카카오 로그아웃
+        await UserApi.instance.logout(); //카카오 로그아웃
         print('카카오 계정 로그아웃 성공');
       } else if (loginPlatform == 'naver') {
-        await FlutterNaverLogin.logOutAndDeleteToken();   //네이버 로그아웃
+        await FlutterNaverLogin.logOutAndDeleteToken(); //네이버 로그아웃
         print('네이버 계정 로그아웃 성공');
       } else if (loginPlatform == 'local') {
         print('로컬 계정 로그아웃 성공');
@@ -240,49 +244,57 @@ class _LoginWidgetState extends State<LoginWidget> {
   void _showEmailAuthDialog() {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        child: Container(
-          width: MediaQuery.of(context).size.width * 0.9,
-          height: MediaQuery.of(context).size.height * 0.8,
-          padding: const EdgeInsets.all(16),
-          child: Scaffold(
-            body: SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      builder: (context) =>
+          Dialog(
+            child: Container(
+              width: MediaQuery
+                  .of(context)
+                  .size
+                  .width * 0.9,
+              height: MediaQuery
+                  .of(context)
+                  .size
+                  .height * 0.8,
+              padding: const EdgeInsets.all(16),
+              child: Scaffold(
+                body: SafeArea(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
-                        '이메일 로그인',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            '이메일 로그인',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
+                      const Divider(),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0),
+                            child: EmailAuthWidget(
+                              onLoginSuccess: loginWithLocal,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  const Divider(),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: EmailAuthWidget(
-                          onLoginSuccess: loginWithLocal,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
     );
   }
 
@@ -294,7 +306,10 @@ class _LoginWidgetState extends State<LoginWidget> {
       child: SingleChildScrollView(
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            minHeight: MediaQuery.of(context).size.height,
+            minHeight: MediaQuery
+                .of(context)
+                .size
+                .height,
           ),
           child: IntrinsicHeight(
             child: Column(
@@ -321,37 +336,41 @@ class _LoginWidgetState extends State<LoginWidget> {
                     onPressed: logout,
                     child: const Text('로그아웃'),
                   ),
-                ] else ...[
-                  const SizedBox(height: 40),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _showLocalLogin = !_showLocalLogin;
-                      });
-                    },
-                    style: TextButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      minimumSize: const Size(150, 45),
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.zero,
+                ] else
+                  ...[
+                    const SizedBox(height: 40),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _showLocalLogin = !_showLocalLogin;
+                        });
+                      },
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        minimumSize: const Size(150, 45),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.zero,
+                        ),
+                      ),
+                      child: Text(
+                        _showLocalLogin ? '로컬 로그인 폼 숨기기' : '로컬 로그인',
+                        style: const TextStyle(
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                    child: Text(
-                      _showLocalLogin ? '로컬 로그인 폼 숨기기' : '로컬 로그인',
-                      style: const TextStyle(
-                        color: Colors.white,
+                    if (_showLocalLogin)
+                      Container(
+                        height: MediaQuery
+                            .of(context)
+                            .size
+                            .height * 0.7,
+                        padding: const EdgeInsets.all(16.0),
+                        child: EmailAuthWidget(
+                          onLoginSuccess: loginWithLocal,
+                        ),
                       ),
-                    ),
-                  ),
-                  if (_showLocalLogin)
-                    Container(
-                      height: MediaQuery.of(context).size.height * 0.7,
-                      padding: const EdgeInsets.all(16.0),
-                      child: EmailAuthWidget(
-                        onLoginSuccess: loginWithLocal,
-                      ),
-                    ),
-                ],
+                  ],
                 const SizedBox(height: 5),
                 // 소셜 로그인 버튼들
                 Column(
@@ -384,6 +403,36 @@ class _LoginWidgetState extends State<LoginWidget> {
                         width: 150,
                         height: 45,
                         fit: BoxFit.contain,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) =>
+                              LoginWidget()),
+                        );
+                      },
+                      child: Container(
+                          width: 150,
+                          height: 45,
+                          decoration: BoxDecoration(
+                              color: Colors.blue,
+                              borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('로그인 하지않고 넘어가기',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.normal,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          )
                       ),
                     ),
                   ],
