@@ -5,6 +5,7 @@ import 'package:flutter_naver_login/interface/types/naver_login_status.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:flutter_naver_login/flutter_naver_login.dart';
+import 'package:project/widgets/nav_main_page.dart';
 import 'database_service.dart'; //DB 연동을 위한 사용자 정의 클래스
 import 'email_auth_widget.dart';
 
@@ -411,7 +412,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) =>
-                              LoginWidget()),
+                              nav_MainPage()),
                         );
                       },
                       child: Container(
