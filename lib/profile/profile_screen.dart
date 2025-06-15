@@ -1,24 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:project/widgets/language_dialog.dart';
+import 'package:easy_localization/easy_localization.dart';
+
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
+  void _showLanguageDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const LanguageDialog(),
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.indigo.shade50,
       appBar: AppBar(
-        title: const Text(
-          '프로필',
-          style: TextStyle(color: Colors.black87),
-        ),
-        backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        title:  Text('내 정보',
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Colors.black87),
-            onPressed: () {
-              // 설정 화면으로 이동
-            },
+            icon: Icon(Icons.language),
+            onPressed: () => _showLanguageDialog(context),
+            tooltip: 'language_selection'.tr(),
           ),
         ],
       ),

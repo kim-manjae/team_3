@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:project/widgets/language_dialog.dart';
+import 'package:project/widgets/nav_main_page.dart';
 import '../models/reservation.dart';
 import '../services/auth_service.dart';
 import '../services/reservation_service.dart';
@@ -140,7 +141,7 @@ class _HospitalReservationPageState extends State<HospitalReservationPage> {
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => ReservationListPage()),
+      MaterialPageRoute(builder: (context) => nav_MainPage(initialIndex: 2)),
     );
   }
 

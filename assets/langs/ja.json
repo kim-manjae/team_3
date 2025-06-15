@@ -166,5 +166,12 @@
   "chatbot.action_reservation": "病院予約をお手伝いします！病院検索に移動します。",
   "chatbot.input_message": "メッセージを入力してください...",
   "error": "エラーが発生しました。",
-  "ok": "確認"
+  "ok": "確認",
+  "home_title": "メイン画面",
+  "pharmacy_search": "薬局検索",
+  "chatbot.chat": "チャットボットと会話する",
+  "chatbot.subchat": "チャットボットと会話してみてください。\n道案内から病院まで一度に！",
+  "home": "ホーム",
+  "chatbot": "チャットボット",
+  "myinfo": "マイ情報"
 }

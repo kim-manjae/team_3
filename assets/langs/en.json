@@ -167,5 +167,12 @@
   "chatbot.action_reservation": "I will help you make a hospital reservation! Moving to hospital search.",
   "chatbot.input_message": "Please enter a message...",
   "error": "An error has occurred.",
-  "ok": "OK"
+  "ok": "OK",
+  "home.title": "main_screen",
+  "pharmacy_search": "pharmacy_search",
+  "chatbot.chat": "Chat with the chatbot",
+  "chatbot.subchat": "Try chatting with the chatbot.\nFrom finding directions to hospitals, all in one!",
+  "home": "Home",
+  "chatbot": "Chat bot",
+  "myinfo": "My Info"
 }

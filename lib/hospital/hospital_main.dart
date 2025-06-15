@@ -35,7 +35,7 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
         elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false,
-        title: Text('메인 화면',
+        title: Text("home_title".tr(),
           style: TextStyle(
               fontWeight: FontWeight.bold,
               color: Colors.black87),
@@ -139,7 +139,7 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                               ),
                               SizedBox(height: 0),
                               Text(
-                                '병원 찾기',
+                                "hospital_search".tr(),
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -185,7 +185,7 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                               ),
                               SizedBox(height: 0),
                               Text(
-                                '약국 찾기',
+                                "pharmacy_search".tr(),
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -240,7 +240,7 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    '챗봇으로 대화하기',
+                                    "chatbot.chat".tr(),
                                     style: TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.w900,
@@ -249,7 +249,7 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                                   ),
                                   SizedBox(height: 8),
                                   Text(
-                                    '챗봇으로 대화를 해보세요. \n길찾기부터 병원까지 한번에!',
+                                    "chatbot.subchat".tr(),
                                     style: TextStyle(fontSize: 13, color: Colors.black54),
                                     textAlign: TextAlign.start,
                                   ),
@@ -281,7 +281,7 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          '응급 병원 찾기',
+                          "emergency.nearby".tr(),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

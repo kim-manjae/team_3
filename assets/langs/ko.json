@@ -168,5 +168,12 @@
   "chatbot.action_pharmacy": "내 주변 약국찾기를 도와드릴게요!",
   "chatbot.action_emergency": "응급의료기관 찾기를 도와드릴게요!",
   "chatbot.action_reservation": "병원예약을 도와드릴게요! 내 주변 병원찾기로 이동합니다.",
-  "chatbot.input_message": "메시지를 입력하세요..."
+  "chatbot.input_message": "메시지를 입력하세요...",
+  "home_title": "메인 화면",
+  "pharmacy_search": "약국 찾기",
+  "chatbot.chat": "챗봇으로 대화하기",
+  "chatbot.subchat": "챗봇으로 대화를 해보세요. \\n길찾기부터 병원까지 한번에!",
+  "home": "홈",
+  "chatbot": "챗봇",
+  "myinfo" : "내 정보"
 }
