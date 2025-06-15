@@ -1,4 +1,6 @@
 import 'package:postgres/postgres.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 class DatabaseService {
   //싱글톤 패턴 구현을 위한 인스턴스 변수
@@ -15,6 +17,13 @@ class DatabaseService {
 
   //내부 생성자 (싱글톤용)
   DatabaseService._internal();
+
+  //비밀번호 해시 함수
+  String _hashPassword(String password) {
+    final bytes = utf8.encode(password); // 비밀번호를 바이트로 인코딩
+    final hash = sha256.convert(bytes); // SHA-256 해시 생성
+    return hash.toString();
+  }
 
   //DB 연결 함수
   Future<void> connect() async {
@@ -34,10 +43,103 @@ class DatabaseService {
         await _connection.open();   //DB 연결 오픈
         _isConnected = true;        //연결 상태 플래그 갱신
         print('데이터베이스 연결 성공');
+
+        //이메일 회원가입용 테이블 생성
+        await _connection.execute('''
+          CREATE TABLE IF NOT EXISTS email_users (
+            id SERIAL PRIMARY KEY,
+            nickname VARCHAR(255) NOT NULL,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        ''');
       } catch (e) {
         print('데이터베이스 연결 실패: $e');
         rethrow;                    //에러를 상위 호출자에게 전달
       }
+    }
+  }
+
+  // 이메일 회원가입 함수
+  Future<bool> registerWithEmail({
+    required String email,
+    required String password,
+    required String nickname,
+  }) async {
+    try {
+      if (!_isConnected) {
+        await connect();
+      }
+
+      if (nickname.trim().isEmpty) {
+        print('닉네임이 비어 있습니다. 유효한 닉네임을 입력하세요.');
+        return false;
+      }
+
+      // 이메일 중복 체크
+      final existingUser = await _connection.query(
+        'SELECT * FROM email_users WHERE email = @email',
+        substitutionValues: {'email': email},
+      );
+
+      if (existingUser.isNotEmpty) {
+        print('이미 존재하는 이메일입니다.');
+        return false;
+      }
+
+      // 비밀번호 해시화 및 사용자 정보 저장
+      final passwordHash = _hashPassword(password);
+      await _connection.execute('''
+        INSERT INTO email_users (nickname, email, password_hash)
+        VALUES (@nickname, @email, @passwordHash)
+      ''', substitutionValues: {
+        'nickname': nickname,
+        'email': email,
+        'passwordHash': passwordHash,
+      });
+
+      print('로컬 계정 회원가입 성공');
+      return true;
+    } catch (e) {
+      print('로컬 계정 회원가입 실패 : $e');
+      return false;
+    }
+  }
+
+  // 이메일 로그인 함수
+  Future<Map<String, dynamic>?> loginWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      if (!_isConnected) {
+        await connect();
+      }
+
+      final passwordHash = _hashPassword(password);
+      final results = await _connection.query(
+        'SELECT * FROM email_users WHERE email = @email AND password_hash = @passwordHash',
+        substitutionValues: {
+          'email': email,
+          'passwordHash': passwordHash,
+        },
+      );
+
+      if (results.isNotEmpty) {
+        final nickname = results[0][1]; // 닉네임 컬럼
+        print('닉네임 : $nickname');
+        return {
+          'nickname': results[0][1],
+          'email': results[0][2],
+          'password': passwordHash
+        };
+      }
+      print('이메일 또는 비밀번호가 일치하지 않습니다.');
+      return null;
+    } catch (e) {
+      print('로그인 실패 : $e');
+      return null;
     }
   }
 
@@ -56,6 +158,7 @@ class DatabaseService {
     required String nickname,
     required String loginPlatform,
     required String profileImage,
+    String? password,
   }) async {
     try {
       if (!_isConnected) {
@@ -117,8 +220,8 @@ class DatabaseService {
       //결과가 있으면 Map 형태로 반환
       if (results.isNotEmpty) {
         return {
-          'email': results[0][1],           //이메일
-          'nickname': results[0][2],        //닉네임
+          'nickname': results[0][1],        //닉네임
+          'email': results[0][2],           //이메일
           'loginPlatform': results[0][3],   //로그인 플랫폼
           'profileImage': results[0][4],    //프로필 이미지 URL
         };
