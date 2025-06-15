@@ -55,65 +55,49 @@ class _EmergencyMapPageState extends State<EmergencyMapPage> {
 
       setState(() => _currentPosition = pos);
 
-      // 캐시된 응급의료기관 데이터 사용
-      List<EmergencyFacility>? cachedFacilities = appState.emergencyFacilities;
+      // 응급의료기관 데이터 가져오기
+      List<EmergencyFacility> facilities = [];
+      try {
+        facilities = await EmergencyService.fetchNearbyEmergency(
+          latitude: pos.latitude,
+          longitude: pos.longitude,
+        );
+      } catch (e) {
+        print('응급의료기관 데이터 로드 실패: $e');
+      }
 
-      if (cachedFacilities == null || cachedFacilities.isEmpty) {
-        setState(() {
-          _facilities = []; // 빈 리스트로 설정
-          _markers = {}; // 빈 마커 세트로 설정
-          _loading = false;
-          _errorMessage = null; // 에러 메시지를 null로 설정
-        });
-      } else {
-        setState(() {
-          _facilities = cachedFacilities;
-          _markers = cachedFacilities
-              .where((f) => f.wgs84Lat != null && f.wgs84Lon != null)
-              .map((f) {
-            double lat = double.parse(f.wgs84Lat!);
-            double lon = double.parse(f.wgs84Lon!);
-            return NMarker(
-              id: f.hpid ?? f.dutyName ?? '',
-              position: NLatLng(lat, lon),
-            )
-              ..setCaption(NOverlayCaption(
-                text: f.dutyName ?? '',
-                textSize: 14,
-                color: Colors.red,
-              ));
-          }).toSet();
-          _loading = false;
-          _errorMessage = null;
-        });
+      // 마커 생성
+      final markers = facilities
+          .where((f) => f.wgs84Lat != null && f.wgs84Lon != null)
+          .map((f) {
+        double lat = double.parse(f.wgs84Lat!);
+        double lon = double.parse(f.wgs84Lon!);
+        return NMarker(
+          id: f.hpid ?? f.dutyName ?? '',
+          position: NLatLng(lat, lon),
+        )
+          ..setCaption(NOverlayCaption(
+            text: f.dutyName ?? '',
+            textSize: 14,
+            color: Colors.red,
+          ));
+      }).toSet();
 
+      if (mounted) {
         setState(() {
-          _facilities = cachedFacilities;
-          _markers = cachedFacilities
-              .where((f) => f.wgs84Lat != null && f.wgs84Lon != null)
-              .map((f) {
-            double lat = double.parse(f.wgs84Lat!);
-            double lon = double.parse(f.wgs84Lon!);
-            return NMarker(
-              id: f.hpid ?? f.dutyName ?? '',
-              position: NLatLng(lat, lon),
-            )
-              ..setCaption(NOverlayCaption(
-                text: f.dutyName ?? '',
-                textSize: 14,
-                color: Colors.red,
-              ));
-          })
-              .toSet();
+          _facilities = facilities;
+          _markers = markers;
           _loading = false;
-          _errorMessage = null;
+          _errorMessage = facilities.isEmpty ? 'emergency.no_facility'.tr() : null;
         });
       }
     } catch (e) {
-      setState(() {
-        _loading = false;
-        _errorMessage = e.toString();
-      });
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _errorMessage = e.toString();
+        });
+      }
     }
   }
 
@@ -142,11 +126,22 @@ class _EmergencyMapPageState extends State<EmergencyMapPage> {
             children: [
               Icon(Icons.error_outline, size: 48, color: Colors.red),
               SizedBox(height: 16),
-              Text(_errorMessage!, textAlign: TextAlign.center),
+              Text(
+                _errorMessage!.contains('권한')
+                    ? '위치 권한이 필요합니다.\n설정에서 권한을 허용해 주세요.'
+                    : _errorMessage!,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
               SizedBox(height: 16),
-              ElevatedButton(
+              ElevatedButton.icon(
                 onPressed: _initLocationAndFetch,
-                child: Text('다시 시도'),
+                icon: Icon(Icons.refresh),
+                label: Text('재시도'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
               ),
             ],
           ),
@@ -229,7 +224,7 @@ class _EmergencyMapPageState extends State<EmergencyMapPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => MedicalFacilityDetailPage(facility: facility.toMedicalFacility(), ),
+                      builder: (_) => MedicalFacilityDetailPage(facility: facility.toMedicalFacility(), fromMainHospitalSearch: false),
                     ),
                   );
                 });
@@ -240,33 +235,33 @@ class _EmergencyMapPageState extends State<EmergencyMapPage> {
 
           //---------------
           // 응급의료기관이 주변에 없을때 메시지 표시
-    if (_facilities.isEmpty)
-    Positioned(
-    top: 16,
-    left: 16,
-    right: 16,
-    child: Container(
-    padding: EdgeInsets.all(8),
-    decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(8),
-    boxShadow: [
-    BoxShadow(
-    color: Colors.black26,
-    blurRadius: 4,
-    ),
-    ],
-    ),
-    child: Text(
-    'emergency.no_facility'.tr(),
-    textAlign: TextAlign.center,
-    style: TextStyle(
-    color: Colors.red,
-    fontWeight: FontWeight.bold,
-    ),
-    ),
-    ),
-    ),
+          if (_facilities.isEmpty)
+            Positioned(
+              top: 16,
+              left: 16,
+              right: 16,
+              child: Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+                child: Text(
+                  'emergency.no_facility'.tr(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
 
           // 하단에 응급의료기관 목록 표시
           if (_isListVisible)

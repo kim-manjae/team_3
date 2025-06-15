@@ -2,10 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:project/widgets/language_dialog.dart';
 import '../pharmacy/pharmacy_find.dart';
 import '../reservation/reservation_list_page.dart';
 import '../widgets/nav_main_page.dart';
-import 'hospital_search_result_page.dart';
+import 'hospital_search_result_page.dart' as hospital;
 import 'package:easy_localization/easy_localization.dart';
 import '../emergency/emergency_box.dart';
 import '../emergency/emergency_map_page.dart';
@@ -22,49 +23,7 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
   void _showLanguageDialog() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('language_selection'.tr()),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: Text('korean'.tr()),
-                onTap: () {
-                  context.setLocale(const Locale('ko'));
-                  Navigator.pop(context);
-                },
-                trailing:
-                    context.locale.languageCode == 'ko'
-                        ? Icon(Icons.check, color: Colors.green)
-                        : null,
-              ),
-              ListTile(
-                title: Text('english'.tr()),
-                onTap: () {
-                  context.setLocale(const Locale('en'));
-                  Navigator.pop(context);
-                },
-                trailing:
-                    context.locale.languageCode == 'en'
-                        ? Icon(Icons.check, color: Colors.green)
-                        : null,
-              ),
-              ListTile(
-                title: Text('japanese'.tr()),
-                onTap: () {
-                  context.setLocale(const Locale('ja'));
-                  Navigator.pop(context);
-                },
-                trailing:
-                    context.locale.languageCode == 'ja'
-                        ? Icon(Icons.check, color: Colors.green)
-                        : null,
-              ),
-            ],
-          ),
-        );
-      },
+      builder: (context) => const LanguageDialog(),
     );
   }
 
@@ -75,10 +34,12 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
       appBar: AppBar(
         elevation: 0,
         centerTitle: true,
+        automaticallyImplyLeading: false,
         title: Text('메인 화면',
-            style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.black87),),
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87),
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.language),
@@ -152,44 +113,44 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                             context,
                             MaterialPageRoute(
                               builder:
-                                  (context) => HospitalSearchResultPage(),
+                                  (context) => hospital.HospitalSearchResultPage(),
                             ),
                           );
                         },
-                          child: Container(
-                              width: double.infinity,
-                              height: 200,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.blueAccent.shade100,
-                                  width: 1,
+                        child: Container(
+                          width: double.infinity,
+                          height: 200,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.blueAccent.shade100,
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.local_hospital,
+                                size: 100,
+                                color: Color(0xFF4BB8EA),
+                              ),
+                              SizedBox(height: 0),
+                              Text(
+                                '병원 찾기',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
                                 ),
                               ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.local_hospital,
-                                    size: 100,
-                                    color: Colors.blueAccent.shade700,
-                                  ),
-                                  SizedBox(height: 0),
-                                  Text(
-                                    '병원 찾기',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            ],
+                          ),
                         ),
                       ),
+                    ),
                     SizedBox(width: 16),
                     Expanded(
                       child: GestureDetector(
@@ -220,7 +181,7 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                               Icon(
                                 Icons.local_pharmacy,
                                 size: 100,
-                                color: Colors.blueAccent.shade700,
+                                color: Color(0xFF4BB8EA),
                               ),
                               SizedBox(height: 0),
                               Text(
@@ -234,8 +195,8 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                             ],
                           ),
                         ),
-                        ),
                       ),
+                    ),
                     // ),
                   ],
                 ),
@@ -245,8 +206,8 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                    builder: (context) => nav_MainPage(initialIndex: 1),
-                  ),
+                        builder: (context) => nav_MainPage(initialIndex: 1),
+                      ),
                     );
                   },
 
@@ -275,25 +236,25 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                             ),
                             SizedBox(width: 12),
                             Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '챗봇으로 대화하기',
-                                      style: TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.w900,
-                                        color: Colors.black87,
-                                      ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '챗봇으로 대화하기',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.black87,
                                     ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      '챗봇으로 대화를 해보세요. \n길찾기부터 병원까지 한번에!',
-                                      style: TextStyle(fontSize: 13, color: Colors.black54),
-                                      textAlign: TextAlign.start,
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    '챗봇으로 대화를 해보세요. \n길찾기부터 병원까지 한번에!',
+                                    style: TextStyle(fontSize: 13, color: Colors.black54),
+                                    textAlign: TextAlign.start,
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -362,16 +323,16 @@ class _PolygonPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint =
-        Paint()
-          ..color = Colors.white10.withOpacity(0.3)
-          ..style = PaintingStyle.fill;
+    Paint()
+      ..color = Colors.white10.withOpacity(0.3)
+      ..style = PaintingStyle.fill;
 
     final path =
-        Path()
-          ..moveTo(size.width * 0.2, size.height * 0.1)
-          ..lineTo(size.width * 0.8, size.height * 0.25)
-          ..lineTo(size.width * 0.5, size.height * 0.6)
-          ..close();
+    Path()
+      ..moveTo(size.width * 0.2, size.height * 0.1)
+      ..lineTo(size.width * 0.8, size.height * 0.25)
+      ..lineTo(size.width * 0.5, size.height * 0.6)
+      ..close();
 
     canvas.drawPath(path, paint);
     // 더 많은 폴리곤을 그리고 싶으면 여기 추가

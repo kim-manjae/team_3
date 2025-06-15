@@ -154,9 +154,13 @@ class NaverDirectionsButton extends StatelessWidget {
       height: height,
       child: ElevatedButton.icon(
         icon: Icon(Icons.directions),
-        label: Text(buttonText),
+        label: Text(buttonText,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
+          backgroundColor: Color(0xFF4BB8EA),
           foregroundColor: Colors.white,
         ),
         onPressed: () async {

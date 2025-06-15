@@ -6,16 +6,13 @@ import requests
 import xml.etree.ElementTree as ET
 from math import radians, sin, cos, sqrt, atan2
 import os
-from dotenv import load_dotenv
-import threading
-import time
 
 router = APIRouter()
-load_dotenv(dotenv_path="key.env")
+
 # API 설정
 class APIConfig:
     BASE_URL = "http://apis.data.go.kr/B552657/ErmctInfoInqireService"
-    SERVICE_KEY = os.getenv("EMERGENCY_SERVICE_KEY")
+    SERVICE_KEY = os.getenv("EMERGENCY_SERVICE_KEY", "Q7Knj2bDIIEEcUa+IssDHW01vO1JbDDmNzyarPtSuPBFJ0OPxjvLgwIi+aWtIKZt/4IHjIK6cBiFvXyBXD67dw==")
 
 # Pydantic 모델 정의
 class EmergencyFacilityItem(BaseModel):
@@ -101,54 +98,6 @@ class SearchResponse(BaseModel):
     timestamp: str = Field(description="조회 시간")
     current_location: Optional[Location] = Field(None, description="현재 위치 정보")
 
-EMERGENCY_CACHE = []
-EMERGENCY_CACHE_LAST_UPDATED = None
-
-def fetch_and_cache_emergencies():
-    global EMERGENCY_CACHE, EMERGENCY_CACHE_LAST_UPDATED
-    try:
-        params = {
-            'serviceKey': APIConfig.SERVICE_KEY,
-            'type': 'xml',
-            'pageNo': 1,
-            'numOfRows': 80000,
-        }
-        url = f"{APIConfig.BASE_URL}/getEgytBassInfoInqire"
-        response = requests.get(url, params=params, timeout=120, verify=False)
-        if response.status_code == 200:
-            root = ET.fromstring(response.text)
-            items = root.findall('.//item')
-            cache = []
-            for item in items:
-                item_dict = {child.tag: child.text for child in item}
-                cache.append(item_dict)
-            EMERGENCY_CACHE = cache
-            EMERGENCY_CACHE_LAST_UPDATED = datetime.now()
-            print(f"[응급의료기관 전체 데이터 캐싱 완료] {len(EMERGENCY_CACHE)}건")
-        else:
-            print(f"[응급의료기관 전체 데이터 캐싱 실패] {response.status_code}: {response.text}")
-    except Exception as e:
-        print(f"[응급의료기관 전체 데이터 캐싱 예외] {e}")
-
-def schedule_emergency_cache_refresh(interval_sec=86400):
-    def refresh():
-        while True:
-            fetch_and_cache_emergencies()
-            time.sleep(interval_sec)
-    threading.Thread(target=refresh, daemon=True).start()
-
-schedule_emergency_cache_refresh()
-
-@router.get("/api/emergency/all")
-async def get_all_emergency_facilities():
-    emergencies = EMERGENCY_CACHE
-    return {
-        "success": True,
-        "items": emergencies,
-        "total_count": len(emergencies),
-        "timestamp": datetime.now().isoformat()
-    }
-
 def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     R = 6371  # 지구의 반경 (km)
     lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
@@ -159,41 +108,6 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     distance = R * c
     return distance * 1000  # m 단위로 변환
 
-@router.get("/api/emergency/nearby")
-async def get_nearby_emergency_facilities(
-    latitude: float,
-    longitude: float,
-    radius: int = 5000
-):
-    results = []
-    for item in EMERGENCY_CACHE:
-        try:
-            # 위도/경도, 응급실 운영여부 값 안전하게 파싱
-            lat_raw = (item.get('wgs84Lat') or '').strip()
-            lon_raw = (item.get('wgs84Lon') or '').strip()
-            duty_eryn = (item.get('dutyEryn') or '').strip()
-            if not lat_raw or not lon_raw or duty_eryn != '1':
-                continue
-            lat = float(lat_raw)
-            lon = float(lon_raw)
-            distance = calculate_distance(latitude, longitude, lat, lon)
-            # 디버깅용 로그
-            #print(f"병원: {item.get('dutyName')}, 거리: {distance}, dutyEryn: {duty_eryn}")
-            if distance <= radius:
-                item_with_distance = dict(item)
-                item_with_distance['distance'] = distance
-                results.append(item_with_distance)
-        except Exception as e:
-            #print(f'예외: {e}, 데이터: {item}')
-            continue
-    results.sort(key=lambda x: x['distance'])
-    return {
-        "success": True,
-        "items": results,
-        "total_count": len(results),
-        "timestamp": datetime.now().isoformat()
-    }
-    
 @router.get("/api/emergency/search")
 async def search_emergency_facilities(
     STAGE1: str = Query(..., description="시도 (예: 서울특별시)"),
@@ -251,6 +165,7 @@ async def search_emergency_facilities(
             ]):
                 continue
 
+            # 필요한 필드만 추출
             filtered_item = {
                 'hpid': item_dict.get('hpid'),
                 'dutyName': item_dict.get('dutyName'),
@@ -260,7 +175,20 @@ async def search_emergency_facilities(
                 'wgs84Lon': item_dict.get('wgs84Lon'),
                 'dgidIdName': item_dict.get('dgidIdName'),
             }
-            results.append(filtered_item)
+
+            # 거리 계산이 필요한 경우
+            if latitude and longitude:
+                try:
+                    lat = float(filtered_item['wgs84Lat'])
+                    lon = float(filtered_item['wgs84Lon'])
+                    distance = calculate_distance(latitude, longitude, lat, lon)
+                    if distance <= radius:
+                        filtered_item['distance'] = distance
+                        results.append(filtered_item)
+                except (ValueError, TypeError):
+                    continue
+            else:
+                results.append(filtered_item)
         
         # 거리순 정렬
         if latitude and longitude:
@@ -283,4 +211,3 @@ async def search_emergency_facilities(
         raise HTTPException(status_code=500, detail=f"XML 파싱 실패: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 내부 오류: {str(e)}") 
-    

@@ -153,5 +153,18 @@
   "reservation.notification": "予約通知",
   "reservation.reminder": "予約前日リマインダー",
   "reservation.reminder_set": "リマインダーが設定されました",
-  "reservation.reminder_cancelled": "リマインダーがキャンセルされました"
+  "reservation.reminder_cancelled": "リマインダーがキャンセルされました",
+  "chatbot.greeting": "こんにちは！私はAIチャットボットAidocです。ご質問や必要な医療サービスがあればお知らせください。",
+  "chatbot.title": "AIチャットボットAidoc",
+  "chatbot.find_hospital": "近くの病院を探す",
+  "chatbot.find_pharmacy": "近くの薬局を探す",
+  "chatbot.find_emergency": "救急医療機関を探す",
+  "chatbot.make_reservation": "病院予約をする",
+  "chatbot.action_hospital": "近くの病院探しをお手伝いします！",
+  "chatbot.action_pharmacy": "近くの薬局探しをお手伝いします！",
+  "chatbot.action_emergency": "救急医療機関探しをお手伝いします！",
+  "chatbot.action_reservation": "病院予約をお手伝いします！病院検索に移動します。",
+  "chatbot.input_message": "メッセージを入力してください...",
+  "error": "エラーが発生しました。",
+  "ok": "確認"
 }

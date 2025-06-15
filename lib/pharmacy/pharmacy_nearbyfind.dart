@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:project/widgets/language_dialog.dart';
 import '../component/medical_facility.dart';
 import '../component/medical_facility_detailpage.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 class NearbyMedicalMapWidget extends StatefulWidget {
-  final Position currentPosition;
+  final Position? currentPosition;
   final List<MedicalFacility> facilities;
   final String title;
 
@@ -26,18 +27,54 @@ class _NearbyMedicalMapWidgetState extends State<NearbyMedicalMapWidget> {
   final double _radius = 500; // 500m 반경
   bool _isListVisible = false; // 약국 목록 표시 상태
 
+  void _showLanguageDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => const LanguageDialog(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+
+    //위치 기본 좌표 추가.
+    final defaultLat = 37.542908;
+    final defaultLon = 126.677074;
+
+    // 2) 실제로 사용할 중심 좌표 결정
+    final centerLat = widget.currentPosition?.latitude ?? defaultLat;
+    final centerLon = widget.currentPosition?.longitude ?? defaultLon;
+
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title.tr()), backgroundColor: Colors.green),
+      appBar: AppBar(
+          elevation: 0,
+          centerTitle: true,
+          title: Text(
+              widget.title.tr(),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87),
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.language),
+              onPressed: _showLanguageDialog,
+              tooltip: 'language_selection'.tr(),
+            ),
+          ],
+          backgroundColor: Color(0xFFDDF0EE),
+      ),
       body: Stack(
         children: [
           NaverMap(
             options: NaverMapViewOptions(
               initialCameraPosition: NCameraPosition(
+                // null이면 defaultLatLng 사용
                 target: NLatLng(
-                  widget.currentPosition.latitude,
-                  widget.currentPosition.longitude,
+                  centerLat,
+                  centerLon,
+                  // widget.currentPosition.latitude,
+                  // widget.currentPosition.longitude,
                 ),
                 zoom: 14, // 500m 반경이 잘 보이도록 줌 레벨 설정 (필요에 따라 조정, 15가 적절할 수 있습니다)
               ),
@@ -55,8 +92,10 @@ class _NearbyMedicalMapWidgetState extends State<NearbyMedicalMapWidget> {
               final currentMarker = NMarker(
                 id: 'current_location',
                 position: NLatLng(
-                  widget.currentPosition.latitude,
-                  widget.currentPosition.longitude,
+                  centerLat,
+                  centerLon,
+                  // widget.currentPosition.latitude,
+                  // widget.currentPosition.longitude,
                 ),
               );
               currentMarker.setCaption(
@@ -72,8 +111,10 @@ class _NearbyMedicalMapWidgetState extends State<NearbyMedicalMapWidget> {
               final circle = NCircleOverlay(
                 id: 'radius_circle',
                 center: NLatLng(
-                  widget.currentPosition.latitude,
-                  widget.currentPosition.longitude,
+                  centerLat,
+                  centerLon,
+                  // widget.currentPosition.latitude,
+                  // widget.currentPosition.longitude,
                 ),
                 radius: _radius,
                 color: Colors.green.withOpacity(0.1),
@@ -143,9 +184,13 @@ class _NearbyMedicalMapWidgetState extends State<NearbyMedicalMapWidget> {
                           _isListVisible = false;
                         });
                       },
-                      label: Text('pharmacy.view_map'.tr()),
+                      label: Text('pharmacy.view_map'.tr(),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),),
                       icon: Icon(Icons.map),
-                      backgroundColor: Colors.green,
+                      backgroundColor: Color(0xFF4BB8EA),
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -184,7 +229,7 @@ class _NearbyMedicalMapWidgetState extends State<NearbyMedicalMapWidget> {
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.green,
+                                  color: Color(0xFF146DA3),
                                 ),
                               ),
                               Text(
@@ -280,7 +325,7 @@ class _NearbyMedicalMapWidgetState extends State<NearbyMedicalMapWidget> {
                                       MaterialPageRoute(
                                         builder: (_) => MedicalFacilityDetailPage(
                                           facility: facility,
-                                          // fromMainHospitalSearch: false,
+                                          fromMainHospitalSearch: false,
                                         ),
                                       ),
                                     );
@@ -310,9 +355,13 @@ class _NearbyMedicalMapWidgetState extends State<NearbyMedicalMapWidget> {
                       _isListVisible = !_isListVisible;
                     });
                   },
-                  label: Text('pharmacy.view_list'.tr()),
+                  label: Text('pharmacy.view_list'.tr(),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),),
                   icon: Icon(Icons.list),
-                  backgroundColor: Colors.green,
+                  backgroundColor: Color(0xFF4BB8EA),
                   foregroundColor: Colors.white,
                 ),
               ),

@@ -2,15 +2,15 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:xml/xml.dart';
-import 'dart:math' show cos, sqrt, asin;
 import '../component/medical_facility.dart';
 import 'pharmacy_nearbyfind.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'dart:math' show cos, sqrt, asin;
+import 'package:provider/provider.dart';
+import '../state/app_state.dart';
 
-const String dataGoKrServiceKey = 'Q7Knj2bDIIEEcUa+IssDHW01vO1JbDDmNzyarPtSuPBFJ0OPxjvLgwIi+aWtIKZt/4IHjIK6cBiFvXyBXD67dw==';
-const String dataGoKrApiUrl = 'https://apis.data.go.kr/B552657/ErmctInsttInfoInqireService/getParmacyFullDown';
+// 서버 API 엔드포인트 (예시: 로컬 개발 환경)
+const String serverApiUrl = 'http://localhost:8000/api/pharmacy/all';
 
 // 두 지점 간 거리를 미터 단위로 계산하는 함수 (Haversine 공식)
 double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
@@ -31,66 +31,39 @@ class PharmacyFindPage extends StatefulWidget {
 
 class _PharmacyFindPageState extends State<PharmacyFindPage> {
   @override
+  void initState() {
+    super.initState();
+    _loadAndNavigate();
+  }
+
+  Future<void> _loadAndNavigate() async {
+    try {
+      final data = await _initializeData();
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => NearbyMedicalMapWidget(
+            currentPosition: data['position'],
+            facilities: data['pharmacies'],
+            title: 'pharmacy.nearby',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: _initializeData(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text('find_pharmacy'.tr()),
-            ),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text(
-                    'pharmacy.searching'.tr(),
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        if (snapshot.hasError) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text('find_pharmacy'.tr()),
-            ),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, color: Colors.red, size: 48),
-                  SizedBox(height: 16),
-                  Text(snapshot.error.toString()),
-                  SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {});
-                    },
-                    child: Text('retry'.tr()),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        final data = snapshot.data!;
-        return NearbyMedicalMapWidget(
-          currentPosition: data['position'],
-          facilities: data['pharmacies'],
-          title: 'pharmacy.nearby',
-        );
-      },
+    return NearbyMedicalMapWidget(
+      currentPosition: context.read<AppState>().position!,
+      facilities: context.read<AppState>().pharmacies ?? [],
+      title: 'pharmacy.nearby',
     );
   }
 
@@ -114,13 +87,8 @@ class _PharmacyFindPageState extends State<PharmacyFindPage> {
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      // 3. 약국 데이터 가져오기 > 네트워크 요청, 대량 응답 파싱 > 오래 걸림
-      final url = Uri.parse('$dataGoKrApiUrl'
-          '?serviceKey=${Uri.encodeComponent(dataGoKrServiceKey)}'
-          '&pageNo=1'
-          '&numOfRows=5000'
-      );
-
+      // 3. 약국 데이터 가져오기 (서버 API 호출)
+      final url = Uri.parse(serverApiUrl);
       final response = await http.get(url);
       if (response.statusCode != 200) {
         throw Exception('pharmacy.api_error'.tr());
@@ -128,29 +96,13 @@ class _PharmacyFindPageState extends State<PharmacyFindPage> {
 
       List<MedicalFacility> allPharmacies = [];
       try {
-        // # xml 파싱 > 대량 노드 처리로 오래 걸림
-        final document = XmlDocument.parse(utf8.decode(response.bodyBytes));
-        final items = document.findAllElements('item');
-
-        if (items.isNotEmpty) {
-          allPharmacies = items.map((node) {
-            final Map<String, dynamic> itemMap = {};
-            for (final child in node.children) {
-              if (child is XmlElement) {
-                itemMap[child.name.local] = child.text;
-              }
-            }
-            if (itemMap['wgs84Lat'] != null && itemMap['wgs84Lon'] != null) {
-              try {
-                double.parse(itemMap['wgs84Lat'].toString());
-                double.parse(itemMap['wgs84Lon'].toString());
-              } catch (e) {
-                return null;
-              }
-            }
-            return MedicalFacility.fromJson(itemMap);
-          }).where((facility) => facility != null).toList().cast<MedicalFacility>();
-        }
+        final jsonData = json.decode(utf8.decode(response.bodyBytes));
+        final items = jsonData['items'] as List<dynamic>;
+        allPharmacies = items.map((item) {
+          // 서버에서 내려주는 필드명에 맞게 매핑
+          final Map<String, dynamic> itemMap = Map<String, dynamic>.from(item);
+          return MedicalFacility.fromJson(itemMap);
+        }).toList();
       } catch (e) {
         throw Exception('pharmacy.parse_error'.tr());
       }

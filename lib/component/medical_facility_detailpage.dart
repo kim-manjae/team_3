@@ -1,6 +1,7 @@
 // 의료기관 상세 정보 화면
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'package:project/widgets/language_dialog.dart';
 import '../map/route_map_page.dart';
 import '../reservation/hospital_reservation_page.dart';
 import '../services/navigation_service.dart';
@@ -113,6 +114,14 @@ class MedicalFacilityDetailPage extends StatelessWidget {
     );
   }
 
+  //언어 변경 로직
+  void _showLanguageDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const LanguageDialog(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final dutyTimes = getDutyTimes();
@@ -125,8 +134,20 @@ class MedicalFacilityDetailPage extends StatelessWidget {
     calculatedStatus.contains('운영종료') ? Colors.red : Colors.grey;
 
     return Scaffold(
+      // backgroundColor: Colors.indigo.shade50,
       appBar: AppBar(
-        title: Text(facility.getCleanDutyName() ?? 'detail.no_name'.tr()),
+        centerTitle: true,
+        title: Text('병원 상세 정보',
+        ),
+        // 언어 변경 아이콘
+        actions: [
+          IconButton(
+            icon: Icon(Icons.language),
+            onPressed: () => _showLanguageDialog(context),
+            tooltip: 'language_selection'.tr(),
+          ),
+        ],
+        // title: Text(facility.getCleanDutyName() ?? 'detail.no_name'.tr()),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -169,7 +190,7 @@ class MedicalFacilityDetailPage extends StatelessWidget {
                     icon: Icon(Icons.calendar_today),
                     label: Text('reservation.make'.tr()),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: Color(0xFF4BB8EA),
                       foregroundColor: Colors.white,
                     ),
                   ),

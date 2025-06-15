@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:project/widgets/language_dialog.dart';
 import 'chatbot_message.dart';
 import 'chatbot_bubble.dart';
 import 'chatbot_input.dart';
@@ -14,10 +15,7 @@ class ChatbotPage extends StatefulWidget {
 
 class _ChatbotPageState extends State<ChatbotPage> {
   final List<ChatbotMessage> _messages = [
-    ChatbotMessage(
-      text: 'chatbot.greeting'.tr(),
-      sender: ChatSender.bot,
-    ),
+    ChatbotMessage(text: 'chatbot.greeting'.tr(), sender: ChatSender.bot),
   ];
   final ChatbotService _service = ChatbotService();
   bool _isLoading = false;
@@ -36,7 +34,10 @@ class _ChatbotPageState extends State<ChatbotPage> {
         );
       }
     } else {
-      Future.delayed(const Duration(milliseconds: 100), () => _scrollToBottom(instant: instant));
+      Future.delayed(
+        const Duration(milliseconds: 100),
+        () => _scrollToBottom(instant: instant),
+      );
     }
   }
 
@@ -55,11 +56,13 @@ class _ChatbotPageState extends State<ChatbotPage> {
     final replyAction = command == 'reservation' ? 'hospital' : command;
 
     setState(() {
-      _messages.add(ChatbotMessage(
-        text: reply,
-        sender: ChatSender.bot,
-        action: command != null ? replyAction : null,
-      ));
+      _messages.add(
+        ChatbotMessage(
+          text: reply,
+          sender: ChatSender.bot,
+          action: command != null ? replyAction : null,
+        ),
+      );
       _isLoading = false;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
@@ -80,11 +83,30 @@ class _ChatbotPageState extends State<ChatbotPage> {
     }
   }
 
+  void _showLanguageDialog() {
+    showDialog(context: context, builder: (context) => const LanguageDialog());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.indigo.shade50,
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(title: Text('chatbot.title'.tr())),
+      appBar: AppBar(
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        title: Text(
+          'chatbot.title'.tr(),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.language),
+            onPressed: _showLanguageDialog,
+            tooltip: 'language_selection'.tr(),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -102,30 +124,81 @@ class _ChatbotPageState extends State<ChatbotPage> {
                   if (index == 1) {
                     // 네비게이션 버튼
                     return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      child: Column(
                         children: [
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.local_hospital),
-                            label: Text('chatbot.find_hospital'.tr()),
-                            onPressed: () => _onQuickAction('hospital'),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.local_hospital),
+                                  label: Text('chatbot.find_hospital'.tr(),
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                  ),),
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                    backgroundColor: Color(0xFF4BB8EA),
+                                  ),
+                                  onPressed: () => _onQuickAction('hospital'),
+                                ),
+                              ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.local_pharmacy),
+                                  label: Text('chatbot.find_pharmacy'.tr(),
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                  ),),
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                    backgroundColor: Color(0xFF4BB8EA),
+                                  ),
+                                  onPressed: () => _onQuickAction('pharmacy'),
+                                ),
+                              ),
+                            ],
                           ),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.local_pharmacy),
-                            label: Text('chatbot.find_pharmacy'.tr()),
-                            onPressed: () => _onQuickAction('pharmacy'),
-                          ),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.emergency),
-                            label: Text('chatbot.find_emergency'.tr()),
-                            onPressed: () => _onQuickAction('emergency'),
-                          ),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.calendar_today),
-                            label: Text('chatbot.make_reservation'.tr()),
-                            onPressed: () => _onQuickAction('reservation'),
+                          SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.emergency),
+                                  label: Text('chatbot.find_emergency'.tr(),
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                  ),),
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                    backgroundColor: Color(0xFF4BB8EA),
+                                  ),
+                                  onPressed: () => _onQuickAction('emergency'),
+                                ),
+                              ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.calendar_today),
+                                  label: Text('chatbot.make_reservation'.tr(),
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                  ),),
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                    backgroundColor: Color(0xFF4BB8EA),
+                                  ),
+                                  onPressed:
+                                      () => _onQuickAction('reservation'),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -146,7 +219,10 @@ class _ChatbotPageState extends State<ChatbotPage> {
               ),
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: ChatbotInput(onSend: _sendMessage, focusNode: _inputFocusNode),
+              child: ChatbotInput(
+                onSend: _sendMessage,
+                focusNode: _inputFocusNode,
+              ),
             ),
           ],
         ),

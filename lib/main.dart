@@ -5,7 +5,7 @@ import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:kakao_flutter_sdk_common/kakao_flutter_sdk_common.dart';
 import 'package:project/chat_bot/chatbot_page.dart';
 import 'package:project/emergency/emergency_map_page.dart';
-import 'package:project/hospital/hospital_search_result_page.dart';
+import 'package:project/hospital/hospital_search_result_page.dart' as hospital;
 import 'package:project/pharmacy/pharmacy_find.dart';
 import 'package:project/service/social_login.dart';      // LoginWidget 정의된 파일
 import 'package:project/chat_bot/chatbot_screen.dart';  // 다른 화면들
@@ -30,7 +30,7 @@ void main() async {
   // 다국어 지원 초기화
   await EasyLocalization.ensureInitialized();
 
-  // 1) ..env 로드
+  // 1) .env 로드
   await dotenv.load(fileName: ".env");
 
   // 2) 환경변수에서 키 가져오기
@@ -51,23 +51,19 @@ void main() async {
 
   //카카오 SDK 초기화
   KakaoSdk.init(nativeAppKey: kakaoAppKey);
-  
-  // 소셜 로그인 초기화
-  runApp(const MyApp());
 
-  // 앱 실행
+  // EasyLocalization이 MaterialApp(MyApp)을 반드시 감싸도록 수정
   runApp(
     EasyLocalization(
-      // 지원하는 언어 설정
       supportedLocales: const [
-        Locale('ko'), // 한국어
-        Locale('en'), // 영어
-        Locale('ja'), // 일본어
+        Locale('ko'),
+        Locale('en'),
+        Locale('ja'),
       ],
-      path: 'assets/langs', // 번역 파일 경로
-      fallbackLocale: const Locale('ko'), // 기본 언어
-      startLocale: const Locale('ko'), // 시작 언어
-      useOnlyLangCode: true, // 언어 코드만 사용
+      path: 'assets/langs',
+      fallbackLocale: const Locale('ko'),
+      startLocale: const Locale('ko'),
+      useOnlyLangCode: true,
       child: ChangeNotifierProvider(
         create: (_) => AppState(),
         child: const MyApp(),
@@ -102,7 +98,7 @@ class MyApp extends StatelessWidget {
       home: SplashScreen(),
       routes: {
         '/chatbot': (context) => const ChatbotPage(),
-        '/hospital_search': (context) => const HospitalSearchResultPage(),
+        '/hospital_search': (context) => const hospital.HospitalSearchResultPage(),
         '/pharmacy_nearby': (context) => const PharmacyFindPage(),
         '/emergency_map': (context) => const EmergencyMapPage(),
         '/reservation': (context) => ReservationListPage(),

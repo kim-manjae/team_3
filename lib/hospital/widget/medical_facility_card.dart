@@ -38,7 +38,7 @@ class MedicalFacilityCard extends StatelessWidget {
     }
 
     if (status.contains('운영중')) {
-      return Colors.green;
+      return Color(0xFF4BB8EA);
     } else if (status.contains('운영종료')) {
       return Colors.red;
     }
@@ -53,14 +53,18 @@ class MedicalFacilityCard extends StatelessWidget {
     final statusColor = _getStatusColor(status);
 
     return Card(
-      margin: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       elevation: 1.0,
       child: ListTile(
-        contentPadding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         title: Text(
           facility.getCleanDutyName() ?? 'no_name'.tr(),
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+          fontSize: 18,
+          ),
         ),
+
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

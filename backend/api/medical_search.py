@@ -8,15 +8,13 @@ import xml.etree.ElementTree as ET
 from math import radians, sin, cos, sqrt, atan2
 import threading
 import time
-import os
-from dotenv import load_dotenv
 
 router = APIRouter()
-load_dotenv(dotenv_path="key.env")
+
 # API 설정
 class APIConfig:
     BASE_URL = "http://apis.data.go.kr/B552657/HsptlAsembySearchService"
-    SERVICE_KEY = os.getenv("HSPTL_SERVICE_KEY")
+    SERVICE_KEY = "Q7Knj2bDIIEEcUa+IssDHW01vO1JbDDmNzyarPtSuPBFJ0OPxjvLgwIi+aWtIKZt/4IHjIK6cBiFvXyBXD67dw=="
 
 # Pydantic 모델 정의
 class MedicalFacility(BaseModel):
@@ -76,7 +74,7 @@ def fetch_and_cache_hospitals():
             'serviceKey': APIConfig.SERVICE_KEY,
             'type': 'xml',
             'pageNo': 1,
-            'numOfRows': 1000,  # 최대치로 전체 다운로드
+            'numOfRows': 500,  # 최대치로 전체 다운로드
         }
         url = f"{APIConfig.BASE_URL}/getHsptlMdcncFullDown"
         response = requests.get(url, params=params, timeout=120, verify=False)
@@ -441,17 +439,3 @@ async def get_nearby_medical_facilities(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 내부 오류: {str(e)}")
-
-@router.get("/api/medical/all")
-async def get_all_medical_facilities():
-    hospitals = HOSPITAL_CACHE if HOSPITAL_CACHE else get_hospital_data_fallback()
-    for h in hospitals:
-        process_operating_hours(h)
-        h['is_open'] = is_facility_open(h)
-        h['today_open_status'] = get_today_open_status(h)
-    return {
-        "success": True,
-        "items": hospitals,
-        "total_count": len(hospitals),
-        "timestamp": datetime.now().isoformat()
-    }

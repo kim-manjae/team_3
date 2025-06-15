@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:project/widgets/language_dialog.dart';
 import '../models/reservation.dart';
 import '../services/auth_service.dart';
 import '../services/reservation_service.dart';
@@ -31,7 +32,8 @@ class HospitalReservationPage extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _HospitalReservationPageState createState() => _HospitalReservationPageState();
+  _HospitalReservationPageState createState() =>
+      _HospitalReservationPageState();
 }
 
 class _HospitalReservationPageState extends State<HospitalReservationPage> {
@@ -44,6 +46,11 @@ class _HospitalReservationPageState extends State<HospitalReservationPage> {
   /// 예약 가능한 시간 목록
   List<String> availableTimes = [];
 
+  // 언어 번역 기능
+  void _showLanguageDialog() {
+    showDialog(context: context, builder: (context) => const LanguageDialog());
+  }
+
   @override
   void initState() {
     super.initState();
@@ -54,8 +61,12 @@ class _HospitalReservationPageState extends State<HospitalReservationPage> {
   ///
   /// 영업 시작 시간부터 종료 시간 1시간 전까지 30분 간격으로 예약 가능한 시간을 생성합니다.
   void _generateAvailableTimes() {
-    final openTime = TimeOfDay.fromDateTime(DateTime.parse('2024-01-01 ${widget.openTime}'));
-    final closeTime = TimeOfDay.fromDateTime(DateTime.parse('2024-01-01 ${widget.closeTime}'));
+    final openTime = TimeOfDay.fromDateTime(
+      DateTime.parse('2024-01-01 ${widget.openTime}'),
+    );
+    final closeTime = TimeOfDay.fromDateTime(
+      DateTime.parse('2024-01-01 ${widget.closeTime}'),
+    );
     final endTime = TimeOfDay(
       hour: closeTime.hour - 1,
       minute: closeTime.minute,
@@ -64,8 +75,11 @@ class _HospitalReservationPageState extends State<HospitalReservationPage> {
     availableTimes.clear();
     TimeOfDay currentTime = openTime;
     while (currentTime.hour < endTime.hour ||
-        (currentTime.hour == endTime.hour && currentTime.minute <= endTime.minute)) {
-      availableTimes.add('${currentTime.hour.toString().padLeft(2, '0')}:${currentTime.minute.toString().padLeft(2, '0')}');
+        (currentTime.hour == endTime.hour &&
+            currentTime.minute <= endTime.minute)) {
+      availableTimes.add(
+        '${currentTime.hour.toString().padLeft(2, '0')}:${currentTime.minute.toString().padLeft(2, '0')}',
+      );
       currentTime = TimeOfDay(
         hour: currentTime.hour + (currentTime.minute + 30) ~/ 60,
         minute: (currentTime.minute + 30) % 60,
@@ -79,25 +93,26 @@ class _HospitalReservationPageState extends State<HospitalReservationPage> {
   void _showLoginRequiredDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('login_required'.tr()),
-        content: Text('login_to_reserve'.tr()),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text('cancel'.tr()),
+      builder:
+          (context) => AlertDialog(
+            title: Text('login_required'.tr()),
+            content: Text('login_to_reserve'.tr()),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('cancel'.tr()),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  AuthService.login(); // 임시 로그인 처리
+                  Navigator.pop(context);
+                },
+                child: Text('login'.tr()),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              AuthService.login(); // 임시 로그인 처리
-              Navigator.pop(context);
-            },
-            child: Text('login'.tr()),
-          ),
-        ],
-      ),
     );
   }
 
@@ -125,17 +140,27 @@ class _HospitalReservationPageState extends State<HospitalReservationPage> {
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (context) => ReservationListPage(),
-      ),
+      MaterialPageRoute(builder: (context) => ReservationListPage()),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.indigo.shade50, // 배경색 인데 맘에 안들면 없애기.
       appBar: AppBar(
-        title: Text('make_reservation'.tr()),
+        centerTitle: true,
+        title: Text(
+          'reservation.make'.tr(),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.language),
+            onPressed: _showLanguageDialog,
+            tooltip: 'language_selection'.tr(),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
@@ -143,19 +168,31 @@ class _HospitalReservationPageState extends State<HospitalReservationPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 병원 정보 카드
-            Card(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.hospitalName,
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 8),
-                    Text(widget.hospitalAddress),
-                  ],
+            SizedBox(
+              width: double.infinity,
+              child: Card(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.hospitalName,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        widget.hospitalAddress,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -163,20 +200,28 @@ class _HospitalReservationPageState extends State<HospitalReservationPage> {
             // 날짜 선택 섹션
             Text(
               'reservation.select_date'.tr(),
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
-            CalendarDatePicker(
-              initialDate: selectedDate,
-              firstDate: DateTime.now(),
-              lastDate: DateTime.now().add(Duration(days: 30)),
-              onDateChanged: (date) {
-                setState(() {
-                  selectedDate = date;
-                });
-              },
+            Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: ColorScheme.light(
+                  primary: Color(0xFF4BB8EA), //  선택된 날짜 색상
+                  onPrimary: Colors.white, //  선택된 날짜의 텍스트 색상
+                ),
+              ),
+              child: CalendarDatePicker(
+                initialDate: selectedDate,
+                firstDate: DateTime.now(),
+                lastDate: DateTime.now().add(Duration(days: 30)),
+                onDateChanged: (date) {
+                  setState(() {
+                    selectedDate = date;
+                  });
+                },
+              ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 10),
             // 시간 선택 섹션
             Text(
               'reservation.select_time'.tr(),
@@ -184,26 +229,45 @@ class _HospitalReservationPageState extends State<HospitalReservationPage> {
             ),
             SizedBox(height: 10),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: availableTimes.map((time) {
-                return ChoiceChip(
-                  label: Text(time),
-                  selected: selectedTime == time,
-                  onSelected: (selected) {
-                    setState(() {
-                      selectedTime = selected ? time : null;
-                    });
-                  },
-                );
-              }).toList(),
+              spacing: 10,
+              runSpacing: 6,
+              children:
+                  availableTimes.map((time) {
+                    return ChoiceChip(
+                      label: Text(
+                        time,
+                        style: TextStyle(
+                          color:
+                              selectedTime == time
+                                  ? Colors.white
+                                  : Colors.black,
+                        ),
+                      ),
+                      selected: selectedTime == time,
+                      selectedColor: Color(0xFF4BB8EA),
+                      checkmarkColor: Colors.white,
+                      // backgroundColor: Colors.indigo.shade50,
+                      onSelected: (selected) {
+                        setState(() {
+                          selectedTime = selected ? time : null;
+                        });
+                      },
+                    );
+                  }).toList(),
             ),
             SizedBox(height: 30),
             // 예약 확인 버튼
             Center(
               child: ElevatedButton(
                 onPressed: selectedTime == null ? null : _confirmReservation,
-                child: Text('reservation.confirm'.tr()),
+                child: Text(
+                  'reservation.confirm'.tr(),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                 ),

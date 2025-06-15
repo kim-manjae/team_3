@@ -8,6 +8,7 @@ import os
 import threading
 import time
 from dotenv import load_dotenv
+from math import radians, sin, cos, sqrt, atan2
 
 router = APIRouter()
 load_dotenv(dotenv_path="key.env")
@@ -52,7 +53,7 @@ def fetch_and_cache_pharmacies():
             'serviceKey': APIConfig.SERVICE_KEY,
             'type': 'xml',
             'pageNo': 1,
-            'numOfRows': 500,
+            'numOfRows': 1000,
         }
         url = APIConfig.BASE_URL
         response = requests.get(url, params=params, timeout=120, verify=False)
@@ -108,5 +109,43 @@ async def get_all_pharmacy_facilities():
         "success": True,
         "items": processed,
         "total_count": len(processed),
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.get("/api/pharmacy/nearby")
+async def get_nearby_pharmacies(
+    latitude: float,
+    longitude: float,
+    radius: int = 500
+):
+    def calculate_distance(lat1, lon1, lat2, lon2):
+        R = 6371  # 지구 반지름 (km)
+        lat1, lon1, lat2, lon2 = map(float, [lat1, lon1, lat2, lon2])
+        dlat = radians(lat2 - lat1)
+        dlon = radians(lon2 - lon1)
+        a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1-a))
+        return R * c * 1000  # m 단위
+
+    pharmacies = PHARMACY_CACHE
+    results = []
+    for p in pharmacies:
+        try:
+            lat = float(p.get('wgs84Lat', 0))
+            lon = float(p.get('wgs84Lon', 0))
+            if lat == 0 or lon == 0:
+                continue
+            distance = calculate_distance(latitude, longitude, lat, lon)
+            if distance <= radius:
+                item = dict(p)
+                item['distance'] = distance
+                results.append(item)
+        except Exception:
+            continue
+    results.sort(key=lambda x: x['distance'])
+    return {
+        "success": True,
+        "items": results,
+        "total_count": len(results),
         "timestamp": datetime.now().isoformat()
     } 

@@ -154,5 +154,18 @@
   "reservation.notification": "Reservation Notification",
   "reservation.reminder": "One day before reminder",
   "reservation.reminder_set": "Reminder has been set",
-  "reservation.reminder_cancelled": "Reminder has been cancelled"
+  "reservation.reminder_cancelled": "Reminder has been cancelled",
+  "chatbot.greeting": "Hello! I am AI Chatbot Aidoc. Please let me know if you have any questions or need medical services.",
+  "chatbot.title": "AI Chatbot Aidoc",
+  "chatbot.find_hospital": "Find Nearby Hospital",
+  "chatbot.find_pharmacy": "Find Nearby Pharmacy",
+  "chatbot.find_emergency": "Find Emergency Medical Institution",
+  "chatbot.make_reservation": "Make Hospital Reservation",
+  "chatbot.action_hospital": "I will help you find a nearby hospital!",
+  "chatbot.action_pharmacy": "I will help you find a nearby pharmacy!",
+  "chatbot.action_emergency": "I will help you find an emergency medical institution!",
+  "chatbot.action_reservation": "I will help you make a hospital reservation! Moving to hospital search.",
+  "chatbot.input_message": "Please enter a message...",
+  "error": "An error has occurred.",
+  "ok": "OK"
 }

@@ -26,15 +26,28 @@ double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
   final dLon = _toRadians(lon2 - lon1);
   final a =
       sin(dLat / 2) * sin(dLat / 2) +
-      cos(_toRadians(lat1)) *
-          cos(_toRadians(lat2)) *
-          sin(dLon / 2) *
-          sin(dLon / 2);
+          cos(_toRadians(lat1)) *
+              cos(_toRadians(lat2)) *
+              sin(dLon / 2) *
+              sin(dLon / 2);
   final c = 2 * atan2(sqrt(a), sqrt(1 - a));
   return earthRadius * c;
 }
 
 double _toRadians(double degree) => degree * pi / 180;
+
+Future<T> retry<T>(Future<T> Function() fn, {int retries = 3, Duration delay = const Duration(seconds: 1)}) async {
+  int attempt = 0;
+  while (true) {
+    try {
+      return await fn();
+    } catch (e) {
+      attempt++;
+      if (attempt >= retries) rethrow;
+      await Future.delayed(delay);
+    }
+  }
+}
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -52,8 +65,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _initializeApp() async {
     try {
-      // 1) ..env 로드
-      await dotenv.load(fileName: "..env");
+      // 1) .env 로드
+      await dotenv.load(fileName: ".env");
 
       // 2) SDK 초기화
       final naverId = dotenv.env['NAVER_MAP_CLIENT_ID']!;
@@ -80,36 +93,56 @@ class _SplashScreenState extends State<SplashScreen> {
       );
       context.read<AppState>().position = pos;
 
-      // 5) 약국, 병원, 응급의료기관 데이터 미리 불러오기
-      final pharmFuture = PharmacyService.fetchNearbyPharmacies(pos).catchError(
-        (e) {
-          if (e.toString().contains('pharmacy.no_nearby'.tr())) {
-            return <MedicalFacility>[];
-          }
-          throw e;
-        },
-      );
+      // 5) 약국, 병원, 응급의료기관 데이터 미리 불러오기 (재시도 로직 적용)
+      List<MedicalFacility> pharmacies = [];
+      List<MedicalFacility> hospitals = [];
+      List<EmergencyFacility> emergencyFacilities = [];
+      Map<String, List<MedicalFacility>> subjectData = {};
+      http.Response? hospitalResp;
 
-      final hospFuture = http
-          .get(
-            Uri.parse(
-              '$apiBase/api/medical/nearby?latitude=${pos.latitude}&longitude=${pos.longitude}&radius=10000&type=hospital',
-            ),
-          )
-          .timeout(
-            Duration(seconds: 5),
-            onTimeout: () => http.Response('{"items":[],"total_count":0}', 200),
-          );
+      // 5-1) 약국
+      try {
+        debugPrint('약국 데이터 요청 시작');
+        final result = await retry(() => PharmacyService.fetchNearbyPharmacies(pos));
+        pharmacies = List<MedicalFacility>.from(result);
+        debugPrint('약국 데이터 성공');
+      } catch (e) {
+        debugPrint('약국 데이터 에러: $e');
+        rethrow;
+      }
 
-      // 5-1) 응급의료기관 데이터 로드
-      final emergencyFuture = EmergencyService.fetchNearbyEmergency(
-        stage1: "서울특별시", // TODO: Reverse geocoding으로 실제 행정구역 추출 필요
-        stage2: "강남구",
-        latitude: pos.latitude,
-        longitude: pos.longitude,
-      ).timeout(Duration(seconds: 5), onTimeout: () => <EmergencyFacility>[]);
+      // 5-2) 병원
+      try {
+        debugPrint('병원 데이터 요청 시작');
+        hospitalResp = await retry(() => http.get(
+          Uri.parse(
+            '$apiBase/api/medical/nearby?latitude=${pos.latitude}&longitude=${pos.longitude}&radius=10000&type=hospital',
+          ),
+        ).timeout(
+          Duration(seconds: 5),
+          onTimeout: () => http.Response('{"items":[],"total_count":0}', 200),
+        ));
+        debugPrint('병원 데이터 성공');
+      } catch (e) {
+        debugPrint('병원 데이터 에러: $e');
+        rethrow;
+      }
 
-      // 5-2) 진료과목별 데이터 미리 로드
+      // 5-3) 응급
+      try {
+        debugPrint('응급 데이터 요청 시작');
+        final result = await retry(() => EmergencyService.fetchNearbyEmergency(
+          latitude: pos.latitude,
+          longitude: pos.longitude,
+        ).timeout(Duration(seconds: 5), onTimeout: () => <EmergencyFacility>[]));
+        emergencyFacilities = List<EmergencyFacility>.from(result);
+        debugPrint('응급 데이터 성공');
+      } catch (e) {
+        debugPrint('응급 데이터 에러: $e');
+        rethrow;
+      }
+
+      // 5-4) 진료과목별
       final List<String> subjectKeys = [
         'subject_internal',
         'subject_surgery',
@@ -127,82 +160,64 @@ class _SplashScreenState extends State<SplashScreen> {
         'subject_dentistry',
         'subject_oriental',
       ];
-
-      final subjectFutures =
-          subjectKeys
-              .map(
-                (subject) => http
-                    .get(
-                      Uri.parse(
-                        '$apiBase/api/medical/search?QN=$subject&page_no=1&num_of_rows=25&latitude=${pos.latitude}&longitude=${pos.longitude}',
-                      ),
-                    )
-                    .timeout(
-                      Duration(seconds: 5),
-                      onTimeout:
-                          () => http.Response(
-                            '{"items":[],"total_count":0}',
-                            200,
-                          ),
-                    ),
-              )
-              .toList();
-
-      final results = await Future.wait([
-        pharmFuture,
-        hospFuture,
-        emergencyFuture,
-        ...subjectFutures,
-      ]);
+      for (final subject in subjectKeys) {
+        try {
+          debugPrint('진료과목 $subject 데이터 요청 시작');
+          final resp = await retry(() => http.get(
+            Uri.parse(
+              '$apiBase/api/medical/search?QN=$subject&page_no=1&num_of_rows=25&latitude=${pos.latitude}&longitude=${pos.longitude}',
+            ),
+          ).timeout(
+            Duration(seconds: 5),
+            onTimeout: () => http.Response('{"items":[],"total_count":0}', 200),
+          ));
+          debugPrint('진료과목 $subject 데이터 성공');
+          if (resp.statusCode == 200) {
+            final data = json.decode(utf8.decode(resp.bodyBytes));
+            final List items = data['items'] as List? ?? [];
+            final subjectHospitals = List<MedicalFacility>.from(items.map((e) => MedicalFacility.fromJson(e)));
+            // 거리 계산 및 정렬
+            for (var h in subjectHospitals) {
+              final lat = double.tryParse(h.wgs84Lat ?? '');
+              final lon = double.tryParse(h.wgs84Lon ?? '');
+              if (lat != null && lon != null) {
+                h.distance = calculateDistance(
+                  pos.latitude,
+                  pos.longitude,
+                  lat,
+                  lon,
+                );
+              } else {
+                h.distance = double.infinity;
+              }
+            }
+            final sortedSubjectHospitals = List<MedicalFacility>.from(subjectHospitals);
+            sortedSubjectHospitals.sort((a, b) {
+              final da = a.distance ?? double.infinity;
+              final db = b.distance ?? double.infinity;
+              return da.compareTo(db);
+            });
+            subjectData[subject] = sortedSubjectHospitals;
+          }
+        } catch (e) {
+          debugPrint('진료과목 $subject 데이터 에러: $e');
+        }
+      }
 
       // 6) 데이터 처리
       // 6-1) 약국 데이터 처리
-      final pharmacies = results[0] as List<MedicalFacility>;
+      // (이미 pharmacies에 있음)
 
       // 6-2) 병원 데이터 처리
-      final hospitalResp = results[1] as http.Response;
-      final hospitalData = json.decode(utf8.decode(hospitalResp.bodyBytes));
+      final hospitalData = json.decode(utf8.decode(hospitalResp!.bodyBytes));
       final List items = hospitalData['items'] as List? ?? [];
-      List<MedicalFacility> hospitals =
-          items.map((e) => MedicalFacility.fromJson(e)).toList();
+      hospitals = List<MedicalFacility>.from(items.map((e) => MedicalFacility.fromJson(e)));
 
       // 6-3) 응급의료기관 데이터 처리
-      final emergencyFacilities = results[2] as List<EmergencyFacility>;
+      // (이미 emergencyFacilities에 있음)
 
       // 6-4) 진료과목별 데이터 처리
-      final Map<String, List<MedicalFacility>> subjectData = {};
-      for (int i = 0; i < subjectKeys.length; i++) {
-        final resp = results[i + 3] as http.Response;
-        if (resp.statusCode == 200) {
-          final data = json.decode(utf8.decode(resp.bodyBytes));
-          final List items = data['items'] as List? ?? [];
-          final hospitals =
-              items.map((e) => MedicalFacility.fromJson(e)).toList();
-
-          // 거리 계산 및 정렬
-          for (var h in hospitals) {
-            final lat = double.tryParse(h.wgs84Lat ?? '');
-            final lon = double.tryParse(h.wgs84Lon ?? '');
-            if (lat != null && lon != null) {
-              h.distance = calculateDistance(
-                pos.latitude,
-                pos.longitude,
-                lat,
-                lon,
-              );
-            } else {
-              h.distance = double.infinity;
-            }
-          }
-          hospitals.sort((a, b) {
-            final da = a.distance ?? double.infinity;
-            final db = b.distance ?? double.infinity;
-            return da.compareTo(db);
-          });
-
-          subjectData[subjectKeys[i]] = hospitals;
-        }
-      }
+      // (이미 subjectData에 있음)
 
       // 6-5) 거리 계산
       for (var h in hospitals) {
@@ -216,11 +231,13 @@ class _SplashScreenState extends State<SplashScreen> {
       }
 
       // 6-6) 오름차순 정렬
-      hospitals.sort((a, b) {
+      final sortedHospitals = List<MedicalFacility>.from(hospitals);
+      sortedHospitals.sort((a, b) {
         final da = a.distance ?? double.infinity;
         final db = b.distance ?? double.infinity;
         return da.compareTo(db);
       });
+      hospitals = sortedHospitals;
 
       if (!mounted) return;
 
@@ -246,19 +263,19 @@ class _SplashScreenState extends State<SplashScreen> {
         context: context,
         builder:
             (_) => AlertDialog(
-              title: Text('error'.tr()),
-              content: Text(e.toString()),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const LoginWidget()),
-                    );
-                  },
-                  child: Text('ok'.tr()),
-                ),
-              ],
+          title: Text('error'.tr()),
+          content: Text(e.toString()),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const LoginWidget()),
+                );
+              },
+              child: Text('ok'.tr()),
             ),
+          ],
+        ),
       );
     }
   }

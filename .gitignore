@@ -1,4 +1,4 @@
- # Miscellaneous
+# Miscellaneous
 *.class
 *.log
 *.pyc
@@ -11,7 +11,7 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
-key.env
+.env
 *.env
 
 # IntelliJ related
@@ -46,5 +46,4 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-**/.env
 **/app.yml

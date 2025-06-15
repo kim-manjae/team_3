@@ -9,6 +9,7 @@ class EmergencyFacility {
   final String? wgs84Lon;
   final String? dgidIdName;
   final double? distance;
+  final String? dutyEryn;
 
   // 응급의료기관 상세 정보
   final String? hvec;  // 응급실
@@ -37,6 +38,7 @@ class EmergencyFacility {
     this.hvicc,
     this.hvgc,
     this.MKioskTy25,
+    this.dutyEryn,
   });
 
   factory EmergencyFacility.fromJson(Map<String, dynamic> json) {
@@ -54,6 +56,7 @@ class EmergencyFacility {
       wgs84Lon: getStringValue(json['wgs84Lon']),
       dgidIdName: getStringValue(json['dgidIdName']),
       distance: json['distance'] != null ? double.tryParse(json['distance'].toString()) : null,
+      dutyEryn: getStringValue(json['dutyEryn']),
       hvec: getStringValue(json['hvec']),
       hvoc: getStringValue(json['hvoc']),
       hvcc: getStringValue(json['hvcc']),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:project/widgets/language_dialog.dart';
 import '../services/reservation_service.dart';
 import '../services/auth_service.dart';
 
@@ -8,15 +9,41 @@ import '../services/auth_service.dart';
 /// 이 페이지는 사용자의 모든 예약 정보를 목록 형태로 보여줍니다.
 /// 로그인하지 않은 사용자에게는 로그인 요청 화면을 표시하고,
 /// 예약이 없는 경우 적절한 메시지를 표시합니다.
+
+
+
 class ReservationListPage extends StatelessWidget {
+
+  void _showLanguageDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const LanguageDialog(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // 현재 저장된 모든 예약 정보를 가져옵니다
     final reservations = ReservationService.reservations;
 
     return Scaffold(
+      backgroundColor: Colors.indigo.shade50,
       appBar: AppBar(
-        title: Text('reservation.status'.tr()),
+        elevation: 0,
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        title: Text('reservation.status'.tr(),
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.language),
+            onPressed: () => _showLanguageDialog(context),
+            tooltip: 'language_selection'.tr(),
+          ),
+        ],
       ),
       body: !AuthService.isLoggedIn
       // 로그인하지 않은 경우 로그인 요청 화면 표시

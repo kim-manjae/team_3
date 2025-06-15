@@ -1,11 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from medical_search import router as medical_search_router
-from medical_detail import router as medical_detail_router
-from emergency_search import router as emergency_search_router
-from chatbot import router as chatbot_router
-from dbmain import router as dbmain_router
-from pharmacy_search import router as pharmacy_search_router
+from api.medical_search import router as medical_search_router
+from api.medical_detail import router as medical_detail_router
+from api.emergency_search import router as emergency_search_router
 
 
 app = FastAPI(
@@ -27,9 +24,7 @@ app.add_middleware(
 app.include_router(medical_search_router)
 app.include_router(medical_detail_router)
 app.include_router(emergency_search_router)
-app.include_router(chatbot_router)
-app.include_router(dbmain_router)
-app.include_router(pharmacy_search_router)
+
 
 if __name__ == "__main__":
     import uvicorn
