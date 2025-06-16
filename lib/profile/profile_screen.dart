@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project/widgets/language_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:project/widgets/nav_main_page.dart';
 
 
 class ProfileScreen extends StatelessWidget {
@@ -19,6 +20,16 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.indigo.shade50,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => nav_MainPage(initialIndex: 0)),
+                  (route) => false,
+            );
+          },
+        ),
         elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false,

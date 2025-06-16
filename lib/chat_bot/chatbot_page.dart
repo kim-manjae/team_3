@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:project/widgets/language_dialog.dart';
+import 'package:project/widgets/nav_main_page.dart';
 import 'chatbot_message.dart';
 import 'chatbot_bubble.dart';
 import 'chatbot_input.dart';
@@ -93,6 +94,16 @@ class _ChatbotPageState extends State<ChatbotPage> {
       backgroundColor: Colors.indigo.shade50,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => nav_MainPage(initialIndex: 0)),
+                  (route) => false,
+            );
+          },
+        ),
         centerTitle: true,
         automaticallyImplyLeading: false,
         title: Text(

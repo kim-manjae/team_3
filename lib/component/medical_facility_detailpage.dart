@@ -1,19 +1,20 @@
 // 의료기관 상세 정보 화면
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'package:project/service/auth_service.dart';
 import 'package:project/widgets/language_dialog.dart';
 import '../map/route_map_page.dart';
 import '../reservation/hospital_reservation_page.dart';
-import '../services/navigation_service.dart';
+
 import 'common_naver_map.dart';
 import 'medical_facility.dart';
 import '../map/medical_map.dart';
-import '../services/location_service.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
-import '../services/auth_service.dart';
+
 
 import 'naver_directions_button.dart';
 

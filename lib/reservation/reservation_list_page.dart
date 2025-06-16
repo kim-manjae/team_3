@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:project/service/auth_service.dart';
+import 'package:project/service/reservation_service.dart';
 import 'package:project/widgets/language_dialog.dart';
 import 'package:project/widgets/nav_main_page.dart';
-import '../services/reservation_service.dart';
-import '../services/auth_service.dart';
+
 
 /// 예약 목록을 표시하는 페이지 위젯
 ///
@@ -30,6 +31,16 @@ class ReservationListPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.indigo.shade50,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => nav_MainPage(initialIndex: 0)),
+                  (route) => false,
+            );
+          },
+        ),
         elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false,
@@ -55,15 +66,27 @@ class ReservationListPage extends StatelessWidget {
             Text('reservation.login_required'.tr()),
             SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () {
-                AuthService.login(); // 임시 로그인 처리
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ReservationListPage(),
-                  ),
-                );
-              },
+               onPressed: () {
+                   // 1) 로그인 상태를 true로 변경 (void 반환) :contentReference[oaicite:0]{index=0}
+                   AuthService.login();
+
+                   // 2) 로그인 성공 여부 확인
+                   if (AuthService.isLoggedIn) {
+                     // 3) 성공하면 예약 탭(index:2) 초기화된 메인 화면으로 교체
+                     Navigator.pushReplacement(
+                       context,
+                       MaterialPageRoute(
+                         builder: (_) => nav_MainPage(),
+                       ),
+                     );
+                   } else {
+                     // 4) 실패 시(이론상 없지만) 에러 안내
+                     ScaffoldMessenger.of(context).showSnackBar(
+                       SnackBar(content: Text('login_failed'.tr())),
+                     );
+                   }
+                 },
+
               child: Text('login'.tr()),
             ),
           ],

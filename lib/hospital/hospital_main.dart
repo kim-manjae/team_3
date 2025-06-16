@@ -71,8 +71,9 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                   style: TextStyle(fontSize: 18, color: Colors.black54),
                 ),
                 SizedBox(height: 10),
+
                 SizedBox(
-                  height: 150,  // 슬라이더 높이 조절
+                  height: 130,  // 슬라이더 높이 조절
                   child: PageView.builder(
                     controller: PageController(viewportFraction: 0.9),
                     itemCount: adImages.length,
@@ -141,7 +142,7 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                         },
                         child: Container(
                           width: double.infinity,
-                          height: 200,
+                          height: 190,
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -188,7 +189,7 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                         // child: PolygonOverlay(
                         child: Container(
                           width: double.infinity,
-                          height: 200,
+                          height: 190,
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: Colors.white,

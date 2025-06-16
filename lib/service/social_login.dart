@@ -6,8 +6,10 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:flutter_naver_login/flutter_naver_login.dart';
 import 'package:project/hospital/hospital_main.dart';
+import 'package:project/service/auth_service.dart';
 import 'package:project/widgets/language_dialog.dart';
 import 'package:project/widgets/nav_main_page.dart';
+import 'package:project/widgets/singupwidget.dart';
 import 'database_service.dart';   //DB 연동을 위한 사용자 정의 클래스
 import 'email_auth_widget.dart';
 
@@ -23,6 +25,7 @@ class LoginWidget extends StatefulWidget{
 
 class _LoginWidgetState extends State<LoginWidget> {
   bool isLoggedIn = false; //현재 로그인 여부
+  bool _isLoading = false;
   bool _showLocalLogin = false;
   String? nickname; //로그인한 사용자의 닉네임 (카카오, 네이버용)
   String? email; //로그인한 사용자의 이메일 (구글용)
@@ -119,6 +122,13 @@ class _LoginWidgetState extends State<LoginWidget> {
         loginPlatform: 'google',
         profileImage: profileImage ?? '', //Google 로그인의 경우 빈 문자열 전달
       );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => nav_MainPage(),
+        ),
+      );
     } catch (e) {
       print('Google sign-in error : $e');
     }
@@ -173,6 +183,14 @@ class _LoginWidgetState extends State<LoginWidget> {
         mail: kakaoEmail,
         image: kakaoProfileImage,
       );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => nav_MainPage(),
+        ),
+      );
+
     } catch (e, stack) {
       print('카카오 계정 로그인 실패: $e');
       print('스택트레이스: $stack');
@@ -212,6 +230,14 @@ class _LoginWidgetState extends State<LoginWidget> {
             nick: naverNickname,
             mail: naverEmail,
             image: '');
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => nav_MainPage(),
+          ),
+        );
+
       } else {
         print('네이버 계정 로그인 취소 또는 실패');
       }
@@ -353,16 +379,16 @@ class _LoginWidgetState extends State<LoginWidget> {
               ),
 
               // 2) 타이틀을 로그인용으로 변경
-              Text(
-                'Login',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 32),
+              // Text(
+              //   'Login',
+              //   textAlign: TextAlign.center,
+              //   style: TextStyle(
+              //     fontSize: 26,
+              //     fontWeight: FontWeight.bold,
+              //     color: Colors.black87,
+              //   ),
+              // ),
+              const SizedBox(height: 8),
 
               // 3) 로컬(이메일) 로그인 다이얼로그 띄우기
               TextField(
@@ -397,17 +423,35 @@ class _LoginWidgetState extends State<LoginWidget> {
 
 // 로그인 버튼
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   final email    = _emailController.text.trim();
                   final nickname = _nickController.text.trim();
                   final pw       = _pwController.text;
+
                   if (email.isEmpty || nickname.isEmpty || pw.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('모든 필드를 입력해주세요.')),
                     );
                     return;
                   }
-                  loginWithLocal(email, nickname, pw);
+
+                  await loginWithLocal(email, nickname, pw);
+
+                  // 로그인 성공 여부 확인
+                  if (AuthService.isLoggedIn) {
+                    // 성공시 메인 페이지
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => nav_MainPage()
+                      ),
+                    );
+                  } else {
+                    // 실패시 에러 안내
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('login_failed'.tr())),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF4BB8EA),
@@ -419,6 +463,26 @@ class _LoginWidgetState extends State<LoginWidget> {
                 child: const Text(
                   '로그인',
                   style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // 회원가입 버튼
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => SignupWidget(
+                        onSignup: (email, nick, pw) => loginWithLocal(email, nick, pw),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    '회원가입',
+                    style: TextStyle(decoration: TextDecoration.underline),
+                  ),
                 ),
               ),
 
@@ -446,7 +510,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                   _socialBtn('assets/images/google_login_m.png', loginWithGoogle),
                 ],
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: 16),
               GestureDetector(
                 //건너 뛰기
                 onTap: () {
@@ -459,23 +523,18 @@ class _LoginWidgetState extends State<LoginWidget> {
                   width: 150,
                   height: 30,
                   decoration: BoxDecoration(
-                    color: Colors.teal.shade400,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.arrow_forward,
-                        size: 20,
-                        color: Colors.amber,
-                      ),
                       SizedBox(width: 10),
                       Text(
-                        "로그인 건너뛰기",
+                        "비회원으로 시작하기",
                         style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.amber,
+                          fontSize: 16,
+                          color: Colors.grey,
                         ),
                       ),
                     ],
