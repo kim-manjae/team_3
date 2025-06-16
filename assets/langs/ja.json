@@ -173,5 +173,9 @@
   "chatbot.subchat": "チャットボットと会話してみてください。\n道案内から病院まで一度に！",
   "home": "ホーム",
   "chatbot": "チャットボット",
-  "myinfo": "マイ情報"
+  "myinfo": "マイ情報",
+  "no_more_result": "これ以上結果はありません。",
+  "naver_map_install_guide": "NAVERマップアプリがインストールされていません。インストールしてご利用ください。",
+  "naver_map_install_guide_confirm": "確認を押すとPlayストアに移動します。"
+}
 }

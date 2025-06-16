@@ -174,5 +174,8 @@
   "chatbot.subchat": "Try chatting with the chatbot.\nFrom finding directions to hospitals, all in one!",
   "home": "Home",
   "chatbot": "Chat bot",
-  "myinfo": "My Info"
+  "myinfo": "My Info",
+  "no_more_result": "No more results.",
+  "naver_map_install_guide": "Naver Map app is not installed. Please install it from the Play Store.",
+  "naver_map_install_guide_confirm": "Press OK to go to the Play Store for installation."
 }

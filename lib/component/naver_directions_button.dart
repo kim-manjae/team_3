@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -77,24 +78,79 @@ class NaverDirectionsButton extends StatelessWidget {
 
     try {
       final Uri uri = Uri.parse(urlScheme);
+      print('[NaverMap] Try to launch URI: $uri');
       final bool canLaunch = await canLaunchUrl(uri);
-      print('Can launch URL: $canLaunch');
+      print('[NaverMap] canLaunchUrl: $canLaunch');
 
       if (canLaunch) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        final bool launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+        print('[NaverMap] launchUrl result: $launched');
+        if (!launched) {
+          print('[NaverMap] launchUrl failed, fallback to PlayStore');
+          final result = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('naver_map_install_guide'.tr()),
+              content: Text('naver_map_install_guide_confirm'.tr()),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text('cancel'.tr()),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text('ok'.tr()),
+                ),
+              ],
+            ),
+          );
+          print('[NaverMap] Dialog result: $result');
+          if (result == true) {
+            final Uri playStoreUri = Uri.parse('market://details?id=com.nhn.android.nmap');
+            final Uri webPlayStoreUri = Uri.parse('https://play.google.com/store/apps/details?id=com.nhn.android.nmap');
+            if (await canLaunchUrl(playStoreUri)) {
+              print('[NaverMap] Launch PlayStore URI: $playStoreUri');
+              await launchUrl(playStoreUri, mode: LaunchMode.externalApplication);
+            } else {
+              print('[NaverMap] Launch Web PlayStore URI: $webPlayStoreUri');
+              await launchUrl(webPlayStoreUri, mode: LaunchMode.externalApplication);
+            }
+          }
+        }
       } else {
-        // 네이버 지도 앱이 설치되어 있지 않은 경우 Google Play로 이동
-        final Uri playStoreUri = Uri.parse('market://details?id=com.nhn.android.nmap');
-        final Uri webPlayStoreUri = Uri.parse('https://play.google.com/store/apps/details?id=com.nhn.android.nmap');
-
-        if (await canLaunchUrl(playStoreUri)) {
-          await launchUrl(playStoreUri, mode: LaunchMode.externalApplication);
-        } else {
-          await launchUrl(webPlayStoreUri, mode: LaunchMode.externalApplication);
+        print('[NaverMap] canLaunchUrl is false, fallback to PlayStore');
+        final result = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('naver_map_install_guide'.tr()),
+            content: Text('naver_map_install_guide_confirm'.tr()),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text('cancel'.tr()),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text('ok'.tr()),
+              ),
+            ],
+          ),
+        );
+        print('[NaverMap] Dialog result: $result');
+        if (result == true) {
+          final Uri playStoreUri = Uri.parse('market://details?id=com.nhn.android.nmap');
+          final Uri webPlayStoreUri = Uri.parse('https://play.google.com/store/apps/details?id=com.nhn.android.nmap');
+          if (await canLaunchUrl(playStoreUri)) {
+            print('[NaverMap] Launch PlayStore URI: $playStoreUri');
+            await launchUrl(playStoreUri, mode: LaunchMode.externalApplication);
+          } else {
+            print('[NaverMap] Launch Web PlayStore URI: $webPlayStoreUri');
+            await launchUrl(webPlayStoreUri, mode: LaunchMode.externalApplication);
+          }
         }
       }
-    } catch (e) {
-      print('Error launching Naver Map: $e');
+    } catch (e, st) {
+      print('[NaverMap] Exception: $e\n$st');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('네이버 지도 앱 실행에 실패했습니다.')),
       );
@@ -154,13 +210,9 @@ class NaverDirectionsButton extends StatelessWidget {
       height: height,
       child: ElevatedButton.icon(
         icon: Icon(Icons.directions),
-        label: Text(buttonText,
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),),
+        label: Text(buttonText),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF4BB8EA),
+          backgroundColor: Colors.blue,
           foregroundColor: Colors.white,
         ),
         onPressed: () async {

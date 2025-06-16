@@ -1,32 +1,27 @@
 // 검색/탭/리스트 화면만 담당
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:project/state/app_state.dart';
 import 'package:project/widgets/language_dialog.dart';
+import 'package:provider/provider.dart';
 import '../component/medical_facility.dart';
 import '../component/medical_facility_detailpage.dart';
 import 'dart:math';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:easy_localization/easy_localization.dart';
-import 'package:provider/provider.dart';
-import '../state/app_state.dart';
 import 'widget/medical_facility_card.dart';
 
 const String apiBase = 'http://10.0.2.2:8000';
 
 class HospitalSearchResultPage extends StatefulWidget {
-  final Position? currentPosition;
-
-  const HospitalSearchResultPage({Key? key, this.currentPosition})
-    : super(key: key);
+  const HospitalSearchResultPage({Key? key}) : super(key: key);
 
   @override
-  _HospitalSearchResultPageState createState() =>
-      _HospitalSearchResultPageState();
+  _HospitalSearchResultPageState createState() => _HospitalSearchResultPageState();
 }
 
-class _HospitalSearchResultPageState extends State<HospitalSearchResultPage>
-    with SingleTickerProviderStateMixin {
+class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> with SingleTickerProviderStateMixin {
   List<MedicalFacility> facilities = [];
   bool isLoading = false;
   bool _isPaginating = false;
@@ -37,50 +32,71 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage>
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   late TabController _tabController;
+  final List<String> subjectKeys = [
+    'subject_nearby',
+    'subject_internal',
+    'subject_surgery',
+    'subject_pediatrics',
+    'subject_orthopedics',
+    'subject_ent',
+    'subject_dermatology',
+    'subject_ophthalmology',
+    'subject_neurology',
+    'subject_neurosurgery',
+    'subject_obgyn',
+    'subject_urology',
+    'subject_psychiatry',
+    'subject_family',
+    'subject_dentistry',
+    'subject_oriental',
+  ];
+  final List<String> subjectNames = [
+    '내 주변',
+    '내과',
+    '외과',
+    '소아청소년과',
+    '정형외과',
+    '이비인후과',
+    '피부과',
+    '안과',
+    '신경과',
+    '신경외과',
+    '산부인과',
+    '비뇨기과',
+    '정신건강의학과',
+    '가정의학과',
+    '치과',
+    '한의원',
+  ];
   late List<String> subjects;
   bool _mounted = true;
+  bool _noMoreResultShown = false;
+  bool _isLastPage = false;
 
   @override
   void initState() {
     super.initState();
     _searchController.text = '';
     _scrollController.addListener(_scrollListener);
-    currentPosition = widget.currentPosition;
     _initializeSubjects();
     _tabController = TabController(length: subjects.length, vsync: this);
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) return;
+      _resetNoMoreResultFlag();
       if (_tabController.index == 0) {
         _showNearbyHospitals();
       } else {
         _searchBySubject(subjects[_tabController.index]);
       }
     });
+
+    // 화면 진입시 자동으로 내 주변 병원 표시
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _showNearbyHospitals();
     });
   }
 
   void _initializeSubjects() {
-    final List<String> subjectKeys = [
-      'subject_nearby',
-      'subject_internal',
-      'subject_surgery',
-      'subject_pediatrics',
-      'subject_orthopedics',
-      'subject_ent',
-      'subject_dermatology',
-      'subject_ophthalmology',
-      'subject_neurology',
-      'subject_neurosurgery',
-      'subject_obgyn',
-      'subject_urology',
-      'subject_psychiatry',
-      'subject_family',
-      'subject_dentistry',
-      'subject_oriental',
-    ];
-
     subjects = subjectKeys.map((key) => key.tr()).toList();
   }
 
@@ -103,10 +119,19 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage>
   }
 
   void _scrollListener() {
-    if (_scrollController.position.pixels ==
-        _scrollController.position.maxScrollExtent) {
-      if (!isLoading && !_isPaginating && facilities.length < _totalCount) {
+    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+      if (!isLoading && !_isPaginating && !_isLastPage && facilities.length < _totalCount) {
         _loadNextPage();
+      } else if (!_isPaginating && (_isLastPage || facilities.length >= _totalCount) && !_noMoreResultShown) {
+        // 마지막 페이지 도달 시 한 번만 안내
+        _noMoreResultShown = true;
+        Future.delayed(Duration(milliseconds: 100), () {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('no_more_result'.tr())),
+            );
+          }
+        });
       }
     }
   }
@@ -114,11 +139,12 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage>
   void _performSearch() {
     final keyword = _searchController.text.trim();
     if (keyword.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('input_keyword'.tr())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('input_keyword'.tr())),
+      );
       return;
     }
+    _resetNoMoreResultFlag();
     _startNewSearch();
   }
 
@@ -145,13 +171,14 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage>
   }
 
   Future<void> _fetchData({required int pageNo}) async {
-    if (!mounted) return;
+    if (currentPosition == null) {
+      final appState = context.read<AppState>();
+      currentPosition = appState.position;
+    }
     String url;
-    String base =
-        '$apiBase/api/medical/search?QN=${_searchController.text.trim()}&page_no=$pageNo&num_of_rows=$_itemsPerPage';
+    String base = '$apiBase/api/medical/search?QN=${_searchController.text.trim()}&page_no=$pageNo&num_of_rows=$_itemsPerPage';
     if (currentPosition != null) {
-      base +=
-          '&latitude=${currentPosition!.latitude}&longitude=${currentPosition!.longitude}';
+      base += '&latitude=${currentPosition!.latitude}&longitude=${currentPosition!.longitude}';
     }
     url = base;
     try {
@@ -162,8 +189,7 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage>
         final data = json.decode(utf8.decode(response.bodyBytes));
         final List items = data['items'] ?? [];
         final int totalCount = data['total_count'] ?? 0;
-        List<MedicalFacility> newFacilities =
-            items.map((e) => MedicalFacility.fromJson(e)).toList();
+        List<MedicalFacility> newFacilities = items.map((e) => MedicalFacility.fromJson(e)).toList();
         if (currentPosition != null) {
           for (var facility in newFacilities) {
             double? lat = parseCoordinate(facility.wgs84Lat);
@@ -179,35 +205,42 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage>
               facility.distance = double.infinity;
             }
           }
+        }
+        if (currentPosition != null) {
+          newFacilities = newFacilities.where((facility) {
+            return facility.distance != null && facility.distance! <= 3000;
+          }).toList();
           newFacilities.sort((a, b) {
-            if (a.distance == null && b.distance == null) return 0;
-            if (a.distance == null) return 1;
-            if (b.distance == null) return -1;
-            if (a.distance == double.infinity && b.distance == double.infinity)
-              return 0;
-            if (a.distance == double.infinity) return 1;
-            if (b.distance == double.infinity) return -1;
-            return a.distance!.compareTo(b.distance!);
+            double ad = a.distance ?? double.infinity;
+            double bd = b.distance ?? double.infinity;
+            return ad.compareTo(bd);
           });
         }
         if (mounted) {
           setState(() {
-            facilities = newFacilities;
+            if (pageNo == 1) {
+              facilities = newFacilities;
+            } else {
+              facilities = [...facilities, ...newFacilities];
+            }
             _totalCount = totalCount;
+            _isLastPage = newFacilities.length < _itemsPerPage;
           });
         }
       } else {
         if (mounted) {
+          // 실패해도 기존 목록은 유지
           setState(() {
-            facilities = [];
+            // facilities = [];
             _totalCount = 0;
           });
         }
       }
     } catch (e) {
       if (mounted) {
+        // 실패해도 기존 목록은 유지
         setState(() {
-          facilities = [];
+          // facilities = [];
           _totalCount = 0;
         });
       }
@@ -215,42 +248,17 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage>
   }
 
   void _searchBySubject(String subject) async {
+    _resetNoMoreResultFlag();
     setState(() {
       isLoading = true;
       facilities.clear();
       _currentPage = 1;
       _totalCount = 0;
     });
-
-    // 원래 번역 키로 검색
-    final List<String> subjectKeys = [
-      'subject_nearby',
-      'subject_internal',
-      'subject_surgery',
-      'subject_pediatrics',
-      'subject_orthopedics',
-      'subject_ent',
-      'subject_dermatology',
-      'subject_ophthalmology',
-      'subject_neurology',
-      'subject_neurosurgery',
-      'subject_obgyn',
-      'subject_urology',
-      'subject_psychiatry',
-      'subject_family',
-      'subject_dentistry',
-      'subject_oriental',
-    ];
-
-    String originalKey = '';
-    for (int i = 0; i < subjects.length; i++) {
-      if (subjects[i] == subject) {
-        originalKey = subjectKeys[i];
-        break;
-      }
-    }
-
-    await _fetchDataBySubject(subject: originalKey, pageNo: 1);
+    // subjectNames에서 한글명으로 QN 파라미터 전송
+    int idx = subjects.indexOf(subject);
+    String qn = idx >= 0 ? subjectNames[idx] : subject;
+    await _fetchDataBySubject(subject: qn, pageNo: 1);
     if (mounted) {
       setState(() {
         isLoading = false;
@@ -258,18 +266,14 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage>
     }
   }
 
-  Future<void> _fetchDataBySubject({
-    required String subject,
-    required int pageNo,
-  }) async {
-    // subjectKey(예: subject_internal) → 한글명(예: 내과) 변환
-    final subjectKor = _subjectKeyToKor(subject);
-    // QN 없이 전체 병원 받아오기
-    String url =
-        '$apiBase/api/medical/search?QN=&page_no=$pageNo&num_of_rows=$_itemsPerPage';
+  Future<void> _fetchDataBySubject({required String subject, required int pageNo}) async {
+    if (currentPosition == null) {
+      final appState = context.read<AppState>();
+      currentPosition = appState.position;
+    }
+    String url = '$apiBase/api/medical/search?QN=$subject&page_no=$pageNo&num_of_rows=$_itemsPerPage';
     if (currentPosition != null) {
-      url +=
-          '&latitude=${currentPosition!.latitude}&longitude=${currentPosition!.longitude}';
+      url += '&latitude=${currentPosition!.latitude}&longitude=${currentPosition!.longitude}';
     }
     try {
       final response = await http.get(Uri.parse(url));
@@ -277,8 +281,7 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage>
         final data = json.decode(utf8.decode(response.bodyBytes));
         final List items = data['items'] ?? [];
         final int totalCount = data['total_count'] ?? 0;
-        List<MedicalFacility> newFacilities =
-            items.map((e) => MedicalFacility.fromJson(e)).toList();
+        List<MedicalFacility> newFacilities = items.map((e) => MedicalFacility.fromJson(e)).toList();
         if (currentPosition != null) {
           for (var facility in newFacilities) {
             double? lat = parseCoordinate(facility.wgs84Lat);
@@ -294,113 +297,66 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage>
               facility.distance = double.infinity;
             }
           }
+        }
+        int idx = subjectNames.indexOf(subject);
+        if (idx > 0) {
+          final selectedSubject = subjectNames[idx].replaceAll(' ', '').toLowerCase();
+          if (selectedSubject == '한의원') {
+            newFacilities = newFacilities.where((facility) {
+              final dgidList = (facility.dgidIdName ?? '')
+                  .split(',')
+                  .map((s) => s.trim())
+                  .toList();
+              return dgidList.any((dgid) => dgid.contains('침구과') || dgid.contains('한방'));
+            }).toList();
+          } else if (selectedSubject == '비뇨기과') {
+            newFacilities = newFacilities.where((facility) {
+              final dgidList = (facility.dgidIdName ?? '')
+                  .split(',')
+                  .map((s) => s.trim())
+                  .toList();
+              return dgidList.any((dgid) => dgid.contains('비뇨'));
+            }).toList();
+          } else {
+            newFacilities = newFacilities.where((facility) {
+              final dgidList = (facility.dgidIdName ?? '')
+                  .split(',')
+                  .map((s) => s.trim().replaceAll(' ', '').toLowerCase())
+                  .toList();
+              return dgidList.any((dgid) => dgid.contains(selectedSubject));
+            }).toList();
+          }
+        }
+        if (currentPosition != null) {
+          newFacilities = newFacilities.where((facility) {
+            return facility.distance != null && facility.distance! <= 3000;
+          }).toList();
           newFacilities.sort((a, b) {
-            if (a.distance == null && b.distance == null) return 0;
-            if (a.distance == null) return 1;
-            if (b.distance == null) return -1;
-            if (a.distance == double.infinity && b.distance == double.infinity)
-              return 0;
-            if (a.distance == double.infinity) return 1;
-            if (b.distance == double.infinity) return -1;
-            return a.distance!.compareTo(b.distance!);
+            double ad = a.distance ?? double.infinity;
+            double bd = b.distance ?? double.infinity;
+            return ad.compareTo(bd);
           });
         }
-        // 진료과목 탭(내 주변 제외)에서 병원명에 해당 과목명이 포함된 병원만 필터링
-        if (subject != 'subject_nearby') {
-          String normalize(String s) =>
-              s.replaceAll(RegExp(r'\s'), '').toLowerCase();
-          final normalizedSubject = normalize(subjectKor);
-          newFacilities =
-              newFacilities.where((f) {
-                final name = normalize(f.dutyName ?? '');
-                return name.contains(normalizedSubject);
-              }).toList();
-        }
         setState(() {
-          facilities = newFacilities;
+          if (pageNo == 1) {
+            facilities = newFacilities;
+          } else {
+            facilities = [...facilities, ...newFacilities];
+          }
           _totalCount = totalCount;
+          _isLastPage = newFacilities.length < _itemsPerPage;
         });
       } else {
         setState(() {
-          facilities = [];
+          // facilities = [];
           _totalCount = 0;
         });
       }
     } catch (e) {
       setState(() {
-        facilities = [];
+        // facilities = [];
         _totalCount = 0;
       });
-    }
-  }
-
-  // subjectKey(예: subject_surgery) → 한글명(예: 외과) 변환 함수
-  String _subjectKeyToKor(String key) {
-    switch (key) {
-      case 'subject_internal':
-        return '내과';
-      case 'subject_surgery':
-        return '외과';
-      case 'subject_pediatrics':
-        return '소아과';
-      case 'subject_orthopedics':
-        return '정형외과';
-      case 'subject_ent':
-        return '이비인후과';
-      case 'subject_dermatology':
-        return '피부과';
-      case 'subject_ophthalmology':
-        return '안과';
-      case 'subject_neurology':
-        return '신경과';
-      case 'subject_neurosurgery':
-        return '신경외과';
-      case 'subject_obgyn':
-        return '산부인과';
-      case 'subject_urology':
-        return '비뇨기과';
-      case 'subject_psychiatry':
-        return '정신건강의학과';
-      case 'subject_family':
-        return '가정의학과';
-      case 'subject_dentistry':
-        return '치과';
-      case 'subject_oriental':
-        return '한의원';
-      default:
-        return '';
-    }
-  }
-
-  Future<void> _showNearbyHospitals() async {
-    if (!mounted) return;
-    setState(() {
-      isLoading = true;
-    });
-    try {
-      final appState = context.read<AppState>();
-      List<MedicalFacility>? cachedHospitals = appState.hospitals;
-
-      if (cachedHospitals == null || cachedHospitals.isEmpty) {
-        throw Exception('hospital.no_nearby'.tr());
-      }
-
-      if (mounted) {
-        setState(() {
-          facilities = List.from(cachedHospitals);
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          facilities = [];
-          isLoading = false;
-        });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
-      }
     }
   }
 
@@ -408,12 +364,9 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage>
     const double earthRadius = 6371000;
     final double dLat = _toRadians(lat2 - lat1);
     final double dLon = _toRadians(lon2 - lon1);
-    final double a =
-        sin(dLat / 2) * sin(dLat / 2) +
-        cos(_toRadians(lat1)) *
-            cos(_toRadians(lat2)) *
-            sin(dLon / 2) *
-            sin(dLon / 2);
+    final double a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(_toRadians(lat1)) * cos(_toRadians(lat2)) *
+            sin(dLon / 2) * sin(dLon / 2);
     final double c = 2 * atan2(sqrt(a), sqrt(1 - a));
     return earthRadius * c;
   }
@@ -446,10 +399,7 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage>
         await _fetchData(pageNo: _currentPage);
       } else {
         // 진료과목 탭
-        await _fetchDataBySubject(
-          subject: subjects[_tabController.index],
-          pageNo: _currentPage,
-        );
+        await _fetchDataBySubject(subject: subjects[_tabController.index], pageNo: _currentPage);
       }
     } catch (e) {
       // 에러 처리
@@ -459,6 +409,7 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage>
       });
     }
   }
+
 
   void _showLanguageDialog() {
     showDialog(context: context, builder: (context) => const LanguageDialog());
@@ -622,5 +573,94 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage>
     } else {
       return '${(distance / 1000).toStringAsFixed(1)}km';
     }
+  }
+
+  void _showNearbyHospitals() async {
+    if (!mounted) return;
+    setState(() { isLoading = true; });
+    try {
+      // AppState에서 저장된 위치 정보 가져오기
+      final appState = context.read<AppState>();
+      Position? position = appState.position;
+
+      if (position == null) {
+        throw Exception('위치 정보를 찾을 수 없습니다.');
+      }
+
+      // 이미 캐시된 병원 목록이 있는지 확인
+      List<MedicalFacility>? cachedHospitals = appState.hospitals;
+      if (cachedHospitals != null && cachedHospitals.isNotEmpty) {
+        // 1km 이내 병원 우선, 그 외 병원 추가로 보여주기
+        List<MedicalFacility> within1km = cachedHospitals.where((f) => f.distance != null && f.distance! <= 1000).toList();
+        List<MedicalFacility> over1km = cachedHospitals.where((f) => f.distance == null || f.distance! > 1000).toList();
+        setState(() {
+          facilities = [...within1km, ...over1km];
+          isLoading = false;
+        });
+        return;
+      }
+
+      // 캐시된 데이터가 없는 경우에만 API 호출
+      final response = await http.get(
+          Uri.parse('$apiBase/api/medical/nearby?latitude=${position.latitude}&longitude=${position.longitude}&radius=10000&type=hospital')
+      );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final data = json.decode(utf8.decode(response.bodyBytes));
+        final List items = data['items'] ?? [];
+        List<MedicalFacility> hospitals = items.map((item) => MedicalFacility.fromJson(item)).toList();
+
+        // 거리 계산 및 정렬
+        for (var facility in hospitals) {
+          double? lat = parseCoordinate(facility.wgs84Lat);
+          double? lon = parseCoordinate(facility.wgs84Lon);
+          if (lat != null && lon != null) {
+            facility.distance = calculateDistance(
+              position.latitude,
+              position.longitude,
+              lat,
+              lon,
+            );
+          } else {
+            facility.distance = double.infinity;
+          }
+        }
+
+        hospitals.sort((a, b) {
+          double ad = a.distance ?? double.infinity;
+          double bd = b.distance ?? double.infinity;
+          return ad.compareTo(bd);
+        });
+
+        // 1km 이내 병원 우선, 그 외 병원 추가로 보여주기
+        List<MedicalFacility> within1km = hospitals.where((f) => f.distance != null && f.distance! <= 1000).toList();
+        List<MedicalFacility> over1km = hospitals.where((f) => f.distance == null || f.distance! > 1000).toList();
+
+        // 상태 업데이트 및 캐시 저장
+        if (mounted) {
+          setState(() {
+            facilities = [...within1km, ...over1km];
+            isLoading = false;
+          });
+          appState.hospitals = hospitals;  // 캐시에 저장
+        }
+      } else {
+        throw Exception('서버 오류가 발생했습니다.');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() { isLoading = false; });
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()))
+        );
+      }
+    }
+  }
+
+  void _resetNoMoreResultFlag() {
+    _noMoreResultShown = false;
+    _isLastPage = false;
   }
 }

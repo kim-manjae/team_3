@@ -171,9 +171,12 @@
   "chatbot.input_message": "메시지를 입력하세요...",
   "home_title": "메인 화면",
   "pharmacy_search": "약국 찾기",
-  "chatbot.chat": "챗봇으로 대화하기",
-  "chatbot.subchat": "챗봇으로 대화를 해보세요. \\n길찾기부터 병원까지 한번에!",
+  "chatbot.chat": "AI DOC으로 대화하기",
+  "chatbot.subchat": "챗봇으로 대화를 해보세요. 길찾기부터 병원까지 한번에!",
   "home": "홈",
   "chatbot": "챗봇",
-  "myinfo" : "내 정보"
+  "myinfo" : "내 정보",
+  "no_more_result": "더 이상 결과가 없습니다.",
+  "naver_map_install_guide": "네이버 지도 앱이 설치되어 있지 않습니다. 설치 후 이용해 주세요.",
+  "naver_map_install_guide_confirm": "확인을 누르면 설치를 위해 Play스토어로 이동 됩니다."
 }

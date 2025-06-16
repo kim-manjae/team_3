@@ -229,12 +229,12 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Image.asset(
-                              'assets/images/aidoc_logo.png',
+                              'assets/images/aidoc_logo_noname.png',
                               width: 100,    // 아이콘 크기 대신 너비
                               height: 100,   // 높이 지정
                               fit: BoxFit.contain,
                             ),
-                            SizedBox(width: 12),
+                            SizedBox(width: 20),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
