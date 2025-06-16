@@ -13,6 +13,10 @@ import '../emergency/emergency_map_page.dart';
 
 
 class HospitalMainPage extends StatefulWidget {
+  final String? nickname;
+  const HospitalMainPage({Key? key, this.nickname})
+      : super(key: key);
+
   @override
   _HospitalMainPageState createState() => _HospitalMainPageState();
 }
@@ -26,6 +30,12 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
       builder: (context) => const LanguageDialog(),
     );
   }
+
+  final List<String> adImages = [
+    'assets/images/ad1.png',
+    'assets/images/ad2.png',
+    'assets/images/ad3.png',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -56,19 +66,31 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 20),
-                const Text(
-                  '안녕하세요.',
+                Text(
+                  '안녕하세요, ${widget.nickname ?? '테스트'}',
                   style: TextStyle(fontSize: 18, color: Colors.black54),
                 ),
-                const Text(
-                  '병원 찾기 앱 입니다.',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                SizedBox(height: 10),
+                SizedBox(
+                  height: 150,  // 슬라이더 높이 조절
+                  child: PageView.builder(
+                    controller: PageController(viewportFraction: 0.9),
+                    itemCount: adImages.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.asset(
+                            adImages[index],
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-                SizedBox(height: 10),
+                SizedBox(height: 20),
                 // Container(
                 //   width: double.infinity,
                 //   padding: const EdgeInsets.all(20),
@@ -132,11 +154,12 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
-                                Icons.local_hospital,
-                                size: 100,
-                                color: Color(0xFF4BB8EA),
-                              ),
+                            Image.asset(
+                            'assets/images/aidoc_logo_noname.png',
+                            width: 100,    // 아이콘 크기 대신 너비
+                            height: 100,   // 높이 지정
+                            fit: BoxFit.contain,
+                            ),
                               SizedBox(height: 0),
                               Text(
                                 "hospital_search".tr(),
@@ -178,10 +201,11 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
-                                Icons.local_pharmacy,
-                                size: 100,
-                                color: Color(0xFF4BB8EA),
+                              Image.asset(
+                                'assets/images/aidoc_logo_pha.png',
+                                width: 100,    // 아이콘 크기 대신 너비
+                                height: 100,   // 높이 지정
+                                fit: BoxFit.contain,
                               ),
                               SizedBox(height: 0),
                               Text(
@@ -229,7 +253,7 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Image.asset(
-                              'assets/images/aidoc_logo_noname.png',
+                              'assets/images/aidoc_logo_chat.png',
                               width: 100,    // 아이콘 크기 대신 너비
                               height: 100,   // 높이 지정
                               fit: BoxFit.contain,
@@ -274,18 +298,29 @@ class _HospitalMainPageState extends State<HospitalMainPage> {
                     width: double.infinity,
                     padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                     decoration: BoxDecoration(
-                      color: Colors.red,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.redAccent,
+                        width: 1,
+                      ),
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
+                        Image.asset(
+                          'assets/images/aidoc_logo_noname_em.png',
+                          width: 100,    // 아이콘 크기 대신 너비
+                          height: 100,   // 높이 지정
+                          fit: BoxFit.contain,
+                        ),
+                        SizedBox(width: 40),
                         Text(
                           "emergency.nearby".tr(),
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: Colors.red.shade700,
                           ),
                         ),
                       ],
