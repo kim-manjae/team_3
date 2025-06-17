@@ -38,7 +38,7 @@ class MedicalFacilityCard extends StatelessWidget {
     }
 
     if (status.contains('운영중')) {
-      return Color(0xFF4BB8EA);
+      return Colors.green;
     } else if (status.contains('운영종료')) {
       return Colors.red;
     }

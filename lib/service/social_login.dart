@@ -9,7 +9,6 @@ import 'package:project/hospital/hospital_main.dart';
 import 'package:project/service/auth_service.dart';
 import 'package:project/widgets/language_dialog.dart';
 import 'package:project/widgets/nav_main_page.dart';
-import 'package:project/widgets/singupwidget.dart';
 import 'database_service.dart';   //DB 연동을 위한 사용자 정의 클래스
 import 'email_auth_widget.dart';
 
@@ -390,68 +389,48 @@ class _LoginWidgetState extends State<LoginWidget> {
               // ),
               const SizedBox(height: 8),
 
-              // 3) 로컬(이메일) 로그인 다이얼로그 띄우기
-              TextField(
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.email),
-                  hintText: 'Email',
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-// 비밀번호 입력
-              TextField(
-                obscureText: true,
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.lock),
-                  hintText: 'Password',
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
+//               // 3) 로컬(이메일) 로그인 다이얼로그 띄우기
+//               TextField(
+//                 decoration: InputDecoration(
+//                   prefixIcon: Icon(Icons.email),
+//                   hintText: 'Email',
+//                   filled: true,
+//                   fillColor: Colors.grey.shade100,
+//                   border: OutlineInputBorder(
+//                     borderRadius: BorderRadius.circular(30),
+//                     borderSide: BorderSide.none,
+//                   ),
+//                 ),
+//               ),
+//               const SizedBox(height: 16),
+//
+// // 비밀번호 입력
+//               TextField(
+//                 obscureText: true,
+//                 decoration: InputDecoration(
+//                   prefixIcon: Icon(Icons.lock),
+//                   hintText: 'Password',
+//                   filled: true,
+//                   fillColor: Colors.grey.shade100,
+//                   border: OutlineInputBorder(
+//                     borderRadius: BorderRadius.circular(30),
+//                     borderSide: BorderSide.none,
+//                   ),
+//                 ),
+//               ),
+//               const SizedBox(height: 12),
 
 // 로그인 버튼
               ElevatedButton(
-                onPressed: () async {
-                  final email    = _emailController.text.trim();
-                  final nickname = _nickController.text.trim();
-                  final pw       = _pwController.text;
-
-                  if (email.isEmpty || nickname.isEmpty || pw.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('모든 필드를 입력해주세요.')),
-                    );
-                    return;
-                  }
-
-                  await loginWithLocal(email, nickname, pw);
-
-                  // 로그인 성공 여부 확인
-                  if (AuthService.isLoggedIn) {
-                    // 성공시 메인 페이지
-                    Navigator.pushReplacement(
+                onPressed: () {
+                    Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (_) => nav_MainPage()
+                          builder: (_) => EmailAuthWidget(
+                              onLoginSuccess: (email, nick, pw) => loginWithLocal(email, nick, pw)
+                      ),
                       ),
                     );
-                  } else {
-                    // 실패시 에러 안내
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('login_failed'.tr())),
-                    );
-                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF4BB8EA),
@@ -461,30 +440,30 @@ class _LoginWidgetState extends State<LoginWidget> {
                   ),
                 ),
                 child: const Text(
-                  '로그인',
+                  '간편 로그인 / 회원가입',
                   style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
 
               const SizedBox(height: 12),
 
-              // 회원가입 버튼
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => SignupWidget(
-                        onSignup: (email, nick, pw) => loginWithLocal(email, nick, pw),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    '회원가입',
-                    style: TextStyle(decoration: TextDecoration.underline),
-                  ),
-                ),
-              ),
+              // // 회원가입 버튼
+              // Center(
+              //   child: TextButton(
+              //     onPressed: () {
+              //       showDialog(
+              //         context: context,
+              //         builder: (_) => EmailAuthWidget(
+              //           onLoginSuccess: (email, nick, pw) => loginWithLocal(email, nick, pw),
+              //         ),
+              //       );
+              //     },
+              //     child: const Text(
+              //       '회원가입',
+              //       style: TextStyle(decoration: TextDecoration.underline),
+              //     ),
+              //   ),
+              // ),
 
               const SizedBox(height: 24),
 

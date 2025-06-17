@@ -173,6 +173,9 @@ class _EmailAuthWidgetState extends State<EmailAuthWidget> {
 
   @override
   Widget build(BuildContext context) {
+    AppBar(
+
+    ),
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(

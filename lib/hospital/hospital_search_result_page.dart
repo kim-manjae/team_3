@@ -496,16 +496,28 @@ class _HospitalSearchResultPageState extends State<HospitalSearchResultPage> wit
                         width: 2,
                       ),
                     ),
-                    child: Center(
-                      child: Text(
-                        subjects[idx],
-                        style: TextStyle(
-                          color: selected ? Colors.white : Colors.black,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (idx == 0) ...[
+                            Icon(
+                              Icons.my_location,
+                              size: 18,
+                              color: selected ? Colors.white : Colors.black54,
+                            ),
+                            SizedBox(width: 4),
+                          ],
+                          Text(
+                            subjects[idx],
+                            style: TextStyle(
+                              color: selected ? Colors.white : Colors.black,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
                   ),
                 );
               },

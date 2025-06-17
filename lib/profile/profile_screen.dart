@@ -1,16 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:project/profile/EditProfilePage.dart';
+import 'package:project/service/auth_service.dart';
+import 'package:project/service/social_login.dart';
 import 'package:project/widgets/language_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:project/widgets/nav_main_page.dart';
 
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+  final String? nickname;
+  const ProfileScreen({Key? key, this.nickname})
+      : super(key: key);
 
   void _showLanguageDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => const LanguageDialog(),
+    );
+  }
+
+  // 로그 아웃
+  Widget _socialBtn(String assetPath, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Image.asset(assetPath, fit: BoxFit.contain),
+      ),
     );
   }
 
@@ -33,7 +55,7 @@ class ProfileScreen extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false,
-        title:  Text('내 정보',
+        title:  Text("myinfo".tr(),
           style: TextStyle(
               fontWeight: FontWeight.bold,
               color: Colors.black87),
@@ -61,8 +83,8 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                '사용자',
+              Text(
+                '${nickname ?? '테스트'}',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -73,30 +95,33 @@ class ProfileScreen extends StatelessWidget {
               _buildProfileSection(
                 title: '개인정보',
                 items: [
-                  ProfileMenuItem(
-                    icon: Icons.person_outline,
-                    title: '내 정보 수정',
-                    onTap: () {},
-                  ),
-                  ProfileMenuItem(
-                    icon: Icons.security,
-                    title: '개인정보 보호',
-                    onTap: () {},
-                  ),
+                    SizedBox(
+                      height: 70,
+                      child: ProfileMenuItem(
+                        icon: Icons.person_outline,
+                        title: '내 정보 수정',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => EditProfilePage()),
+                          );
+                        },
+                      ),
+                    ),
                 ],
               ),
               const SizedBox(height: 24),
               _buildProfileSection(
-                title: '알림 설정',
+                title: '고객센터',
                 items: [
                   ProfileMenuItem(
                     icon: Icons.notifications_none,
-                    title: '알림 설정',
+                    title: '공지사항',
                     onTap: () {},
                   ),
                   ProfileMenuItem(
                     icon: Icons.language,
-                    title: '언어 설정',
+                    title: '서비스 이용 문의',
                     onTap: () {},
                   ),
                 ],
@@ -117,6 +142,28 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 24),
+              _buildProfileSection(
+                title: '로그 아웃',
+                items: [
+                  Center(
+                    child: TextButton(
+    onPressed: () {
+                    AuthService.logout();
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => LoginWidget()
+                      ),
+                          (route) => false,
+                    );
+                  },
+                      child: Text('로그 아웃 하기'),
+                    ),
+
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -126,7 +173,7 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildProfileSection({
     required String title,
-    required List<ProfileMenuItem> items,
+    required List<Widget> items,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,4 +256,4 @@ class ProfileMenuItem extends StatelessWidget {
       ),
     );
   }
-} 
+}
